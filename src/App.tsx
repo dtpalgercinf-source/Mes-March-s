@@ -289,7 +289,7 @@ function SettingsView({ data, onImport, onReset }: { data: AppData; onImport: (d
   );
 }
 
-export function App() {
+export default function App() {
   const { data, updateData, resetData } = useAppData();
   const { t, locale } = useI18n();
   const [view, setView] = useState<View>('dashboard');
