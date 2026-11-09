@@ -86,7 +86,63 @@ function ProjectForm({ initial, onSave, onClose }: { initial?: Project; onSave: 
   const set = (key: keyof typeof values, value: string) => setValues((v) => ({ ...v, [key]: value }));
   const submit = (e: FormEvent) => { e.preventDefault(); onSave({ ...values, amount: Number(values.amount) || 0, stage: values.stage as StageId }); };
   const req = <b className="text-error-500">*</b>;
-  return <form onSubmit={submit} className="p-6 space-y-5"><div className="grid md:grid-cols-2 gap-4"><label><span className="label font-medium">{t('form.projectName')} {req}</span><input required className="input border-neutral-200 focus:border-primary-500" value={values.name} onChange={(e) => set('name', e.target.value)} placeholder={t('form.projectNamePh')} /></label><label><span className="label font-medium">{t('form.reference')} {req}</span><input required className="input border-neutral-200 focus:border-primary-500" value={values.reference} onChange={(e) => set('reference', e.target.value)} placeholder={t('form.referencePh')} dir="ltr" /></label><label><span className="label font-medium">{t('form.client')} {req}</span><input required className="input border-neutral-200 focus:border-primary-500" value={values.client} onChange={(e) => set('client', e.target.value)} placeholder={t('form.clientPh')} /></label><label><span className="label font-medium">{t('form.amount')} {req}</span><input required min="0" type="number" className="input border-neutral-200 focus:border-primary-500" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" /></label><label><span className="label font-medium">{t('form.submissionDeadline')}</span><input type="date" className="input border-neutral-200 focus:border-primary-500" value={values.submissionDeadline} onChange={(e) => set('submissionDeadline', e.target.value)} dir="ltr" /></label><label><span className="label font-medium">{t('form.startDate')}</span><input type="date" className="input border-neutral-200 focus:border-primary-500" value={values.startDate} onChange={(e) => set('startDate', e.target.value)} dir="ltr" /></label><label><span className="label font-medium">{t('form.currentStage')}</span><div className="relative"><select className="input appearance-none border-neutral-200 focus:border-primary-500" value={values.stage} onChange={(e) => set('stage', e.target.value)}>{STAGES.map((s) => <option value={s.id} key={s.id}>{stageLabel(s.id, locale)}</option>)}</select><ChevronDown size={17} className="absolute left-3 top-3.5 text-neutral-400 pointer-events-none" /></div></label><label><span className="label font-medium">{t('form.manager')}</span><input className="input border-neutral-200 focus:border-primary-500" value={values.manager} onChange={(e) => set('manager', e.target.value)} placeholder={t('form.managerPh')} /></label></div><label><span className="label font-medium">{t('form.notes')}</span><textarea className="input border-neutral-200 focus:border-primary-500 min-h-24 resize-y" value={values.description} onChange={(e) => set('description', e.target.value)} placeholder={t('form.notesPh')} /></label><div className="flex items-center justify-start gap-3 border-t border-neutral-100 pt-5"><button type="submit" className="btn-primary btn-md flex items-center gap-2"><Check size={17} />{initial ? t('form.save') : t('form.add')}</button><button type="button" className="btn-secondary btn-md" onClick={onClose}>{t('form.cancel')}</button></div></form>;
+  return (
+    <form onSubmit={submit} className="p-6 space-y-6">
+      <div className="bg-neutral-50/60 p-4 rounded-xl border border-neutral-100 mb-2">
+        <p className="text-xs text-neutral-500 font-medium">{t('form.addTitle') || 'معلومات الصفقة والمشروع الجديد'}</p>
+      </div>
+      <div className="grid md:grid-cols-2 gap-5">
+        <label className="space-y-1.5 block">
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><BriefcaseBusiness size={15} className="text-primary-600" />{t('form.projectName')} {req}</span>
+          <input required className="input border-neutral-200 focus:border-primary-500 bg-white shadow-2xs" value={values.name} onChange={(e) => set('name', e.target.value)} placeholder={t('form.projectNamePh')} />
+        </label>
+        <label className="space-y-1.5 block">
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><FileJson size={15} className="text-primary-600" />{t('form.reference')} {req}</span>
+          <input required className="input border-neutral-200 focus:border-primary-500 bg-white shadow-2xs font-mono" value={values.reference} onChange={(e) => set('reference', e.target.value)} placeholder={t('form.referencePh')} dir="ltr" />
+        </label>
+        <label className="space-y-1.5 block">
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><ShieldCheck size={15} className="text-primary-600" />{t('form.client')} {req}</span>
+          <input required className="input border-neutral-200 focus:border-primary-500 bg-white shadow-2xs" value={values.client} onChange={(e) => set('client', e.target.value)} placeholder={t('form.clientPh')} />
+        </label>
+        <label className="space-y-1.5 block">
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CircleDollarSign size={15} className="text-primary-600" />{t('form.amount')} {req}</span>
+          <input required min="0" type="number" className="input border-neutral-200 focus:border-primary-500 bg-white shadow-2xs font-mono" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" />
+        </label>
+        <label className="space-y-1.5 block">
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-primary-600" />{t('form.submissionDeadline')}</span>
+          <input type="date" className="input border-neutral-200 focus:border-primary-500 bg-white shadow-2xs font-mono" value={values.submissionDeadline} onChange={(e) => set('submissionDeadline', e.target.value)} dir="ltr" />
+        </label>
+        <label className="space-y-1.5 block">
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-primary-600" />{t('form.startDate')}</span>
+          <input type="date" className="input border-neutral-200 focus:border-primary-500 bg-white shadow-2xs font-mono" value={values.startDate} onChange={(e) => set('startDate', e.target.value)} dir="ltr" />
+        </label>
+        <label className="space-y-1.5 block">
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Filter size={15} className="text-primary-600" />{t('form.currentStage')}</span>
+          <div className="relative">
+            <select className="input appearance-none border-neutral-200 focus:border-primary-500 bg-white shadow-2xs cursor-pointer" value={values.stage} onChange={(e) => set('stage', e.target.value)}>
+              {STAGES.map((s) => <option value={s.id} key={s.id}>{stageLabel(s.id, locale)}</option>)}
+            </select>
+            <ChevronDown size={17} className="absolute left-3 top-3.5 text-neutral-400 pointer-events-none" />
+          </div>
+        </label>
+        <label className="space-y-1.5 block">
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><BriefcaseBusiness size={15} className="text-primary-600" />{t('form.manager')}</span>
+          <input className="input border-neutral-200 focus:border-primary-500 bg-white shadow-2xs" value={values.manager} onChange={(e) => set('manager', e.target.value)} placeholder={t('form.managerPh')} />
+        </label>
+      </div>
+      <label className="space-y-1.5 block">
+        <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Receipt size={15} className="text-primary-600" />{t('form.notes')}</span>
+        <textarea className="input border-neutral-200 focus:border-primary-500 bg-white shadow-2xs min-h-24 resize-y" value={values.description} onChange={(e) => set('description', e.target.value)} placeholder={t('form.notesPh')} />
+      </label>
+      <div className="flex items-center justify-start gap-3 border-t border-neutral-100 pt-5">
+        <button type="submit" className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold rounded-xl shadow-md transition-all">
+          <Check size={18} />
+          <span>{initial ? t('form.save') : t('form.add')}</span>
+        </button>
+        <button type="button" className="btn-secondary btn-md shadow-2xs" onClick={onClose}>{t('form.cancel')}</button>
+      </div>
+    </form>
+  );
 }
 
 function InvoiceForm({ onSave, onClose }: { onSave: (invoice: Omit<Invoice, 'id' | 'createdAt'>) => void; onClose: () => void }) {
