@@ -332,7 +332,7 @@ export default function App() {
   };
 
   return (
-    <div className={cls('min-h-screen bg-neutral-100 flex flex-col xl:flex-row text-neutral-800 font-sans', locale === 'ar' ? 'rtl' : 'ltr')} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={cls('min-h-screen bg-slate-200 flex flex-col xl:flex-row text-neutral-800 font-sans', locale === 'ar' ? 'rtl' : 'ltr')} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       <aside className="xl:w-72 bg-neutral-900 text-white p-6 flex flex-col justify-between shrink-0 shadow-lg">
         <div className="space-y-8">
           <div className="flex items-center gap-3">
