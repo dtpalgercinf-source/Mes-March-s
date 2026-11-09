@@ -128,4 +128,259 @@ function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: 
   const { t, locale } = useI18n();
   const reminders = projects.filter((p) => p.submissionDeadline).map((p) => ({ p, kind: 'deadline' as const, date: p.submissionDeadline! })).sort((a, b) => a.date.localeCompare(b.date));
   const unpaidInvoices = projects.flatMap((p) => p.invoices.filter((i) => i.status !== 'paid').map((i) => ({ p, i })));
-  return <div className="space-y-6 animate-fade-in"><div><h1 className="text-2xl font-extrabold text-neutral-900">{t('deadlines.title')}</h1><p className="text-sm text-neutral-500 mt-1">{t('deadlines.sub')}</p></div><div className="grid md:grid-cols-3 gap-4"><div className="card p-5 border-r-4 border-r-error-400 card-hover"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-500">{t('deadlines.upcoming30')}</p><p className="text-2xl font-bold text-neutral-900 mt-2">{reminders.filter((r) => { const d = relativeDeadline(r.date, locale); return d.tone === 'danger' || d.tone === 'warning'; }).length}</p></div><div className="w-11 h-11 rounded-xl bg-error-50 text-error-600 flex items-center justify-center"><AlertCircle size={21} /></div></div></div><div className="card p-5 border-r-4 border-r-warning-400 card-hover"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-500">{t('deadlines.unpaidInvoices')}</p><p className="text-2xl font-bold text-neutral-900 mt-2">{unpaidInvoices.length}</p></div><div className="w-11 h-11 rounded-xl bg-warning-50 text-warning-600 flex items-center justify-center"><Receipt size={21} /></div></div></div><div className="card p-5 border-r-4 border-r-success-400 card-hover"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-500">{t('deadlines.tracked')}</p><p className="text-2xl font-bold text-neutral-900 mt-2">{projects.length - reminders.length}</p></div><div className="w-11 h-11 rounded-xl bg-success-50 text-success-600 flex items-center justify-center"><CheckCircle2 size={21} /></div></div></div></div><div className="grid xl:grid-cols-2 gap-6"><div className="card p-5 card-hover"><SectionTitle title={t('deadlines.submissionDeadlines')} subtitle={t('deadlines.sortedByDate')} />{reminders.length ? <div className="space-y-2">{reminders.map(({ p, date }) => { const dl = relativeDeadline(date, locale); return <button key={p.id} onClick={() => onView(p)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-neutral-50 text-right transition-colors"><div className={cls('w-9 h-9 rounded-lg flex items-center justify-center shrink-0', dl.tone === 'danger' ? 'bg-error-50 text-error-600' : dl.tone === 'warning' ? 'bg-warning-50 text-warning-600' : 'bg-neutral-100 text-neutral-500')}><CalendarDays size={17} /></div><div className
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h1 className="text-2xl font-extrabold text-neutral-900">{t('deadlines.title')}</h1>
+        <p className="text-sm text-neutral-500 mt-1">{t('deadlines.sub')}</p>
+      </div>
+      <div className="grid md:grid-cols-3 gap-4">
+        <div className="card p-5 border-r-4 border-r-error-400 card-hover">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-neutral-500">{t('deadlines.upcoming30')}</p>
+              <p className="text-2xl font-bold text-neutral-900 mt-2">{reminders.filter((r) => { const d = relativeDeadline(r.date, locale); return d.tone === 'danger' || d.tone === 'warning'; }).length}</p>
+            </div>
+            <div className="w-11 h-11 rounded-xl bg-error-50 text-error-600 flex items-center justify-center"><AlertCircle size={21} /></div>
+          </div>
+        </div>
+        <div className="card p-5 border-r-4 border-r-warning-400 card-hover">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-neutral-500">{t('deadlines.unpaidInvoices')}</p>
+              <p className="text-2xl font-bold text-neutral-900 mt-2">{unpaidInvoices.length}</p>
+            </div>
+            <div className="w-11 h-11 rounded-xl bg-warning-50 text-warning-600 flex items-center justify-center"><Receipt size={21} /></div>
+          </div>
+        </div>
+        <div className="card p-5 border-r-4 border-r-success-400 card-hover">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-neutral-500">{t('deadlines.tracked')}</p>
+              <p className="text-2xl font-bold text-neutral-900 mt-2">{projects.length - reminders.length}</p>
+            </div>
+            <div className="w-11 h-11 rounded-xl bg-success-50 text-success-600 flex items-center justify-center"><CheckCircle2 size={21} /></div>
+          </div>
+        </div>
+      </div>
+      <div className="grid xl:grid-cols-2 gap-6">
+        <div className="card p-5 card-hover">
+          <SectionTitle title={t('deadlines.submissionDeadlines')} subtitle={t('deadlines.sortedByDate')} />
+          {reminders.length ? (
+            <div className="space-y-2">
+              {reminders.map(({ p, date }) => {
+                const dl = relativeDeadline(date, locale);
+                return (
+                  <button key={p.id} onClick={() => onView(p)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-neutral-50 text-right transition-colors">
+                    <div className={cls('w-9 h-9 rounded-lg flex items-center justify-center shrink-0', dl.tone === 'danger' ? 'bg-error-50 text-error-600' : dl.tone === 'warning' ? 'bg-warning-50 text-warning-600' : 'bg-neutral-100 text-neutral-500')}><CalendarDays size={17} /></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-neutral-700 truncate">{p.name}</p>
+                      <p className="text-xs text-neutral-400 mt-1">{p.reference} · {formatDateShort(date, locale)}</p>
+                    </div>
+                    <span className={cls('text-xs shrink-0', dl.tone === 'danger' ? 'text-error-600' : dl.tone === 'warning' ? 'text-warning-600' : 'text-neutral-400')}>{dl.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-neutral-400 text-center py-8">{t('deadlines.noDeadlines')}</p>
+          )}
+        </div>
+        <div className="card p-5 card-hover">
+          <SectionTitle title={t('deadlines.invoicesProcessing')} subtitle={t('deadlines.needsFollowup')} />
+          {unpaidInvoices.length ? (
+            <div className="space-y-2">
+              {unpaidInvoices.map(({ p, i }) => (
+                <button key={i.id} onClick={() => onView(p)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-neutral-50 text-right transition-colors">
+                  <div className="w-9 h-9 rounded-lg bg-warning-50 text-warning-600 flex items-center justify-center shrink-0"><Receipt size={17} /></div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-neutral-700 truncate">{i.label}</p>
+                    <p className="text-xs text-neutral-400 mt-1 truncate">{p.name}</p>
+                  </div>
+                  <div className="text-left shrink-0">
+                    <p className="text-sm font-semibold text-neutral-700">{formatCurrencyShort(i.amount, locale)}</p>
+                    <p className="text-xs text-neutral-400 mt-1">{invoiceStatusLabel(i.status, locale)}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-neutral-400 text-center py-8">{t('deadlines.allPaid')}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SettingsView({ data, onImport, onReset }: { data: AppData; onImport: (data: AppData) => void; onReset: () => void }) {
+  const { t, locale, setLocale } = useI18n();
+  const { canInstall, installed, promptInstall } = usePwaInstall();
+  const [message, setMessage] = useState('');
+
+  const download = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type }); const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+  };
+
+  const exportJson = () => download(JSON.stringify(data, null, 2), `mes-marches-backup-${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
+  const exportCsvFile = () => download(exportCsv(data.projects), `mes-marches-projects-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
+
+  const importFile = (e: ChangeEvent<HTMLInputElement>, isJson: boolean) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const text = evt.target?.result as string;
+        if (isJson) {
+          const parsed = JSON.parse(text);
+          if (parsed && Array.isArray(parsed.projects)) { onImport(parsed); setMessage(t('settings.importSuccess')); }
+        } else {
+          const imported = importCsv(text);
+          if (imported.length) { onImport({ ...data, projects: [...imported, ...data.projects] }); setMessage(t('settings.importSuccess')); }
+        }
+      } catch { setMessage(t('settings.importError')); }
+    };
+    reader.readAsText(file);
+  };
+
+  return (
+    <div className="space-y-6 max-w-4xl animate-fade-in">
+      <div>
+        <h1 className="text-2xl font-extrabold text-neutral-900">{t('settings.title')}</h1>
+        <p className="text-sm text-neutral-500 mt-1">{t('settings.sub')}</p>
+      </div>
+
+      {message && <div className="p-4 rounded-xl bg-primary-50 text-primary-700 text-sm font-medium flex items-center justify-between"><span>{message}</span><button onClick={() => setMessage('')}><X size={16} /></button></div>}
+
+      <div className="card p-6 space-y-5 card-hover">
+        <h2 className="text-base font-bold text-neutral-900 flex items-center gap-2"><Globe className="text-primary-600" size={18} />{t('settings.language')}</h2>
+        <div className="flex gap-3">
+          <button type="button" className={cls('btn flex-1 py-3 justify-center text-sm', locale === 'ar' ? 'btn-primary' : 'btn-secondary')} onClick={() => setLocale('ar')}>العربية (Arabic)</button>
+          <button type="button" className={cls('btn flex-1 py-3 justify-center text-sm', locale === 'fr' ? 'btn-primary' : 'btn-secondary')} onClick={() => setLocale('fr')}>Français</button>
+        </div>
+      </div>
+
+      <div className="card p-6 space-y-5 card-hover">
+        <h2 className="text-base font-bold text-neutral-900 flex items-center gap-2"><ShieldCheck className="text-success-600" size={18} />{t('settings.data')}</h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <button type="button" className="btn btn-secondary py-3 justify-center" onClick={exportJson}><Download size={17} />{t('settings.exportJson')}</button>
+          <button type="button" className="btn btn-secondary py-3 justify-center" onClick={exportCsvFile}><FileSpreadsheet size={17} />{t('settings.exportCsv')}</button>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-neutral-100">
+          <label className="btn btn-secondary py-3 justify-center cursor-pointer"><Upload size={17} />{t('settings.importJson')}<input type="file" accept=".json" className="hidden" onChange={(e) => importFile(e, true)} /></label>
+          <label className="btn btn-secondary py-3 justify-center cursor-pointer"><FileJson size={17} />{t('settings.importCsv')}<input type="file" accept=".csv" className="hidden" onChange={(e) => importFile(e, false)} /></label>
+        </div>
+      </div>
+
+      {canInstall && !installed && (
+        <div className="card p-6 bg-gradient-to-br from-primary-500 to-primary-700 text-white flex flex-wrap items-center justify-between gap-4 card-hover">
+          <div><h2 className="text-lg font-bold">{t('settings.pwaTitle')}</h2><p className="text-primary-100 text-sm mt-1">{t('settings.pwaSub')}</p></div>
+          <button type="button" onClick={promptInstall} className="bg-white text-primary-700 hover:bg-primary-50 font-semibold px-5 py-2.5 rounded-xl text-sm shadow-sm transition-colors flex items-center gap-2"><MonitorSmartphone size={17} />{t('settings.install')}</button>
+        </div>
+      )}
+
+      <div className="card p-6 border-error-100 space-y-4 card-hover">
+        <h2 className="text-base font-bold text-error-700 flex items-center gap-2"><Trash2 size={18} />{t('settings.dangerZone')}</h2>
+        <p className="text-sm text-neutral-500">{t('settings.resetSub')}</p>
+        <button type="button" className="btn btn-danger btn-md" onClick={() => { if (window.confirm(t('settings.confirmReset'))) onReset(); }}><Trash2 size={17} />{t('settings.reset')}</button>
+      </div>
+    </div>
+  );
+}
+
+export function App() {
+  const { data, updateData, resetData } = useAppData();
+  const { t, locale } = useI18n();
+  const [view, setView] = useState<View>('dashboard');
+  const [modal, setModal] = useState<Modal>(null);
+  const [activeProject, setActiveProject] = useState<Project | null>(null);
+
+  const currentProject = useMemo(() => {
+    if (!modal || modal.kind !== 'detail' || !modal.projectId) return null;
+    return data.projects.find((p) => p.id === modal.projectId) || null;
+  }, [modal, data.projects]);
+
+  const saveProject = (values: Omit<Project, 'createdAt' | 'id' | 'invoices' | 'updatedAt'>) => {
+    const now = new Date().toISOString();
+    if (modal?.kind === 'project' && modal.projectId) {
+      updateData({ ...data, projects: data.projects.map((p) => (p.id === modal.projectId ? { ...p, ...values, updatedAt: now } : p)) });
+    } else {
+      const newProj: Project = { ...values, id: `proj_${Date.now()}`, invoices: [], createdAt: now, updatedAt: now };
+      updateData({ ...data, projects: [newProj, ...data.projects] });
+    }
+    setModal(null);
+  };
+
+  const deleteProject = (id: string) => {
+    if (!window.confirm(t('detail.confirmDelete'))) return;
+    updateData({ ...data, projects: data.projects.filter((p) => p.id !== id) });
+    setModal(null);
+  };
+
+  const addInvoice = (projectId: string, invoice: Omit<Invoice, 'createdAt' | 'id'>) => {
+    const inv: Invoice = { ...invoice, id: `inv_${Date.now()}`, createdAt: new Date().toISOString() };
+    updateData({ ...data, projects: data.projects.map((p) => (p.id === projectId ? { ...p, invoices: [inv, ...p.invoices], updatedAt: new Date().toISOString() } : p)) });
+  };
+
+  const updateInvoice = (projectId: string, invoiceId: string, patch: Partial<Invoice>) => {
+    updateData({ ...data, projects: data.projects.map((p) => (p.id === projectId ? { ...p, invoices: p.invoices.map((i) => (i.id === invoiceId ? { ...i, ...patch } : i)), updatedAt: new Date().toISOString() } : p)) });
+  };
+
+  const deleteInvoice = (projectId: string, invoiceId: string) => {
+    updateData({ ...data, projects: data.projects.map((p) => (p.id === projectId ? { ...p, invoices: p.invoices.filter((i) => i.id !== invoiceId), updatedAt: new Date().toISOString() } : p)) });
+  };
+
+  return (
+    <div className={cls('min-h-screen bg-neutral-100 flex flex-col xl:flex-row text-neutral-800 font-sans', locale === 'ar' ? 'rtl' : 'ltr')} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+      <aside className="xl:w-72 bg-neutral-900 text-white p-6 flex flex-col justify-between shrink-0 shadow-lg">
+        <div className="space-y-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white shadow-md">
+              <BriefcaseBusiness size={21} />
+            </div>
+            <div>
+              <h1 className="font-extrabold text-base tracking-tight">{t('app.title')}</h1>
+              <p className="text-xs text-neutral-400">{t('app.subtitle')}</p>
+            </div>
+          </div>
+          <nav className="space-y-1">
+            {navKeys.map(({ id, key, icon: Icon }) => (
+              <button key={id} onClick={() => setView(id)} className={cls('w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all', view === id ? 'bg-primary-600 text-white shadow-sm' : 'text-neutral-400 hover:text-white hover:bg-neutral-800/70')}>
+                <Icon size={19} />
+                {t(key)}
+              </button>
+            ))}
+          </nav>
+        </div>
+        <div className="pt-6 border-t border-neutral-800/80 mt-6 flex items-center justify-between text-xs text-neutral-400">
+          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-success-500 animate-pulse" /><span>{t('app.autoSave')}</span></div>
+          <button onClick={() => setView('settings')} title={t('nav.settings')} className="p-2 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"><SettingsIcon size={17} /></button>
+        </div>
+      </aside>
+
+      <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full overflow-y-auto">
+        {view === 'dashboard' && <Dashboard projects={data.projects} onViewProject={(p) => setModal({ kind: 'detail', projectId: p.id })} onAdd={() => setModal({ kind: 'project' })} />}
+        {view === 'projects' && <ProjectsView projects={data.projects} onView={(p) => setModal({ kind: 'detail', projectId: p.id })} onEdit={(p) => setModal({ kind: 'project', projectId: p.id })} onAdd={() => setModal({ kind: 'project' })} />}
+        {view === 'deadlines' && <DeadlinesView projects={data.projects} onView={(p) => setModal({ kind: 'detail', projectId: p.id })} />}
+        {view === 'settings' && <SettingsView data={data} onImport={(d) => updateData(d)} onReset={resetData} />}
+      </main>
+
+      {modal?.kind === 'project' && (
+        <ModalShell title={modal.projectId ? t('form.editTitle') : t('form.addTitle')} onClose={() => setModal(null)}>
+          <ProjectForm initial={modal.projectId ? data.projects.find((p) => p.id === modal.projectId) : undefined} onSave={saveProject} onClose={() => setModal(null)} />
+        </ModalShell>
+      )}
+
+      {modal?.kind === 'detail' && currentProject && (
+        <ProjectDetail project={currentProject} onClose={() => setModal(null)} onEdit={() => setModal({ kind: 'project', projectId: currentProject.id })} onDelete={() => deleteProject(currentProject.id)} onAddInvoice={() => setActiveProject(currentProject)} onUpdateInvoice={(invId, patch) => updateInvoice(currentProject.id, invId, patch)} onDeleteInvoice={(invId) => deleteInvoice(currentProject.id, invId)} />
+      )}
+
+      {activeProject && (
+        <ModalShell title={t('form.addInvoiceTitle')} onClose={() => setActiveProject(null)}>
+          <InvoiceForm onSave={(inv) => { addInvoice(activeProject.id, inv); setActiveProject(null); }} onClose={() => setActiveProject(null)} />
+        </ModalShell>
+      )}
+    </div>
+  );
+}
