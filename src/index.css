@@ -2,19 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-slate-50 text-slate-800 antialiased;
-    font-family: 'Cairo', sans-serif;
-  }
+/* إجبار الخلفية والخطوط على الظهور بكل قوة */
+html, body, #root {
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+  font-family: 'Cairo', sans-serif !important;
+  min-height: 100vh;
 }
 
 @layer utilities {
   .shadow-card {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  }
-  
-  .card-hover {
-    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
   }
 }
