@@ -88,7 +88,6 @@ function ProjectForm({ initial, onSave, onClose }: { initial?: Project; onSave: 
   const req = <b className="text-error-500">*</b>;
   return (
     <form onSubmit={submit} className="p-6 space-y-6">
-      {/* الشريط الأفقي باللون الأحمر الفاتح والتصميم المتناسق */}
       <div className="bg-red-50 p-4 rounded-xl border border-red-200 mb-2 flex items-center gap-2 text-red-700 shadow-2xs">
         <BriefcaseBusiness size={18} className="text-red-600 shrink-0" />
         <p className="text-xs font-bold tracking-wide">{t('form.addTitle') || 'معلومات الصفقة والمشروع الجديد'}</p>
@@ -178,17 +177,19 @@ function ProjectDetail({ project, onClose, onEdit, onDelete, onAddInvoice, onUpd
   return (
     <ModalShell title={t('detail.title')} onClose={onClose} wide>
       <div className="p-6 space-y-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        {/* الشريط العلوي في تفاصيل الصفقة بلون عنابي فاتح */}
+        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 shadow-2xs flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-3"><StageBadge stage={project.stage} locale={locale} /><span className="text-xs text-neutral-400 font-mono bg-neutral-50 px-2 py-0.5 rounded border border-neutral-100" dir="ltr">{project.reference}</span></div>
-            <h1 className="text-xl font-bold text-neutral-900">{project.name}</h1>
-            <p className="text-sm text-neutral-500 mt-2 flex items-center gap-2"><BriefcaseBusiness size={15} className="text-neutral-400" />{project.client}</p>
+            <div className="flex items-center gap-2 mb-3"><StageBadge stage={project.stage} locale={locale} /><span className="text-xs text-rose-700 font-mono bg-rose-100/70 px-2 py-0.5 rounded border border-rose-200" dir="ltr">{project.reference}</span></div>
+            <h1 className="text-xl font-extrabold text-rose-950">{project.name}</h1>
+            <p className="text-sm text-rose-800/80 mt-2 flex items-center gap-2 font-medium"><BriefcaseBusiness size={15} className="text-rose-600" />{project.client}</p>
           </div>
           <div className="flex gap-2">
             <button className="btn-danger btn-sm flex items-center gap-1.5 shadow-sm" onClick={onDelete}><Trash2 size={15} />{t('detail.delete')}</button>
-            <button className="btn-secondary btn-sm flex items-center gap-1.5 shadow-sm" onClick={onEdit}><Pencil size={15} />{t('detail.edit')}</button>
+            <button className="btn-secondary btn-sm flex items-center gap-1.5 shadow-sm bg-white text-rose-900 border-rose-200 hover:bg-rose-100" onClick={onEdit}><Pencil size={15} />{t('detail.edit')}</button>
           </div>
         </div>
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="bg-neutral-50/80 border border-neutral-100 rounded-xl p-4 shadow-2xs"><p className="text-xs text-neutral-500">{t('detail.contractValue')}</p><p className="font-bold text-neutral-900 mt-1">{formatCurrency(project.amount, locale)}</p></div>
           <div className="bg-neutral-50/80 border border-neutral-100 rounded-xl p-4 shadow-2xs"><p className="text-xs text-neutral-500">{t('detail.totalInvoices')}</p><p className="font-bold text-neutral-900 mt-1">{formatCurrency(invoiced, locale)}</p></div>
@@ -205,7 +206,20 @@ function ProjectDetail({ project, onClose, onEdit, onDelete, onAddInvoice, onUpd
           <div><p className="text-neutral-400 text-xs mb-1">{t('detail.start')}</p><p className="font-medium text-neutral-700" dir="ltr">{formatDate(project.startDate, locale)}</p></div>
         </div>
         <div className="border-t border-neutral-100 pt-5">
-          <SectionTitle title={t('detail.invoices')} subtitle={`${project.invoices.length} ${t('detail.invoicesCount')}`} action={<button className="btn-primary btn-sm flex items-center gap-1.5 shadow-sm" onClick={onAddInvoice}><Plus size={15} />{t('detail.addInvoice')}</button>} />
+          {/* زر إضافة فاتورة بلون أخضر فاتح */}
+          <SectionTitle 
+            title={t('detail.invoices')} 
+            subtitle={`${project.invoices.length} ${t('detail.invoicesCount')}`} 
+            action={
+              <button 
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl shadow-sm transition-all duration-200" 
+                onClick={onAddInvoice}
+              >
+                <Plus size={16} />
+                <span>{t('detail.addInvoice')}</span>
+              </button>
+            } 
+          />
           {project.invoices.length === 0 ? (
             <div className="rounded-xl border border-dashed border-neutral-200 p-8 text-center text-sm text-neutral-400 bg-neutral-50/50">{t('detail.noInvoices')}</div>
           ) : (
