@@ -114,14 +114,176 @@ function Dashboard({ projects, onViewProject, onAdd }: { projects: Project[]; on
   const statusCounts = STAGES.map((stage) => ({ ...stage, count: projects.filter((p) => p.stage === stage.id).length }));
   const max = Math.max(1, ...statusCounts.map((s) => s.count));
   const upcoming = projects.filter((p) => p.submissionDeadline).sort((a, b) => (a.submissionDeadline ?? '').localeCompare(b.submissionDeadline ?? '')).slice(0, 5);
-  return <div className="space-y-6 animate-fade-in"><div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-extrabold text-neutral-900 tracking-tight">{t('app.welcome')}</h1><p className="text-sm text-neutral-500 mt-1">{t('app.welcomeSub')}</p></div><button className="btn-primary btn-md" onClick={onAdd}><Plus size={17} />{t('dash.addDeal')}</button></div><div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4"><StatCard icon={BriefcaseBusiness} label={t('dash.activeProjects')} value={active.toString()} caption={`${projects.length} ${t('dash.totalFiles')}`} color="blue" /><StatCard icon={CircleDollarSign} label={t('dash.expectedRevenue')} value={formatCurrencyShort(expected, locale)} caption={t('dash.totalContracts')} color="sky" /><StatCard icon={TrendingUp} label={t('dash.collected')} value={formatCurrencyShort(collected, locale)} caption={`${invoiceCount} ${t('dash.invoicesRecorded')}`} color="green" /><StatCard icon={WalletCards} label={t('dash.pending')} value={formatCurrencyShort(pending, locale)} caption={t('dash.awaiting')} color="amber" /></div><div className="grid xl:grid-cols-5 gap-6"><div className="card p-5 xl:col-span-3 card-hover"><SectionTitle title={t('dash.stageDistribution')} subtitle={t('dash.stageSub')} action={<button className="btn-ghost btn-sm" onClick={onAdd}>{t('dash.refresh')} <RefreshCcw size={14} /></button>} /><div className="space-y-3">{statusCounts.map((s) => <div key={s.id} className="flex items-center gap-3"><div className="w-36 sm:w-48 shrink-0 flex items-center gap-2 text-sm text-neutral-600"><span className={cls('w-2 h-2 rounded-full shrink-0', s.dot)} />{stageLabel(s.id, locale)}</div><div className="flex-1 h-2.5 rounded-full bg-neutral-100 overflow-hidden"><div className={cls('h-full rounded-full transition-all', s.dot)} style={{ width: `${(s.count / max) * 100}%` }} /></div><span className="w-6 text-left text-sm font-semibold text-neutral-700">{s.count}</span></div>)}</div></div><div className="card p-5 xl:col-span-2 card-hover"><SectionTitle title={t('dash.financials')} subtitle={t('dash.financialsSub')} /><div className="space-y-5"><div><div className="flex items-center justify-between mb-2 text-sm"><span className="text-neutral-500">{t('dash.collectionRate')}</span><span className="font-bold text-success-600">{expected ? Math.round((collected / expected) * 100) : 0}%</span></div><div className="h-3 bg-neutral-100 rounded-full overflow-hidden"><div className="h-full bg-success-500 rounded-full" style={{ width: `${expected ? Math.min(100, (collected / expected) * 100) : 0}%` }} /></div></div><div className="grid grid-cols-2 gap-3"><div className="rounded-xl bg-success-50 p-4"><p className="text-xs text-success-700">{t('dash.collectedLabel')}</p><p className="text-lg font-bold text-success-800 mt-1">{formatCurrencyShort(collected, locale)}</p></div><div className="rounded-xl bg-warning-50 p-4"><p className="text-xs text-warning-700">{t('dash.pendingLabel')}</p><p className="text-lg font-bold text-warning-800 mt-1">{formatCurrencyShort(pending, locale)}</p></div></div></div></div></div><div className="card p-5 card-hover"><SectionTitle title={t('dash.upcoming')} subtitle={t('dash.upcomingSub')} action={<button className="btn-ghost btn-sm" onClick={() => {}}>{t('dash.viewAll')} <ChevronLeft size={15} className="flip-x" /></button>} />{upcoming.length ? <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">{upcoming.slice(0, 3).map((p) => { const dl = relativeDeadline(p.submissionDeadline, locale); return <button key={p.id} className="text-right rounded-xl border border-neutral-100 hover:border-primary-200 hover:bg-primary-50/40 p-4 transition-colors card-hover" onClick={() => onViewProject(p)}><div className="flex items-start justify-between gap-2"><span className={cls('badge', dl.tone === 'danger' ? 'bg-error-50 text-error-700' : dl.tone === 'warning' ? 'bg-warning-50 text-warning-700' : 'bg-neutral-100 text-neutral-600')}>{dl.label}</span><CalendarDays size={17} className="text-neutral-400" /></div><p className="font-semibold text-sm text-neutral-800 mt-3 line-clamp-1">{p.name}</p><p className="text-xs text-neutral-500 mt-1">{p.client}</p><p className="text-xs text-neutral-400 mt-2">{formatDateShort(p.submissionDeadline, locale)}</p></button>; })}</div> : <p className="text-sm text-neutral-400 py-6 text-center">{t('dash.noDeadlines')}</p>}</div></div>;
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-extrabold text-neutral-900 tracking-tight">{t('app.welcome')}</h1>
+          <p className="text-sm text-neutral-500 mt-1">{t('app.welcomeSub')}</p>
+        </div>
+        <button 
+          className="flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200" 
+          onClick={onAdd}
+        >
+          <Plus size={20} className="shrink-0" />
+          <span>{t('dash.addDeal')}</span>
+        </button>
+      </div>
+      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard icon={BriefcaseBusiness} label={t('dash.activeProjects')} value={active.toString()} caption={`${projects.length} ${t('dash.totalFiles')}`} color="blue" />
+        <StatCard icon={CircleDollarSign} label={t('dash.expectedRevenue')} value={formatCurrencyShort(expected, locale)} caption={t('dash.totalContracts')} color="sky" />
+        <StatCard icon={TrendingUp} label={t('dash.collected')} value={formatCurrencyShort(collected, locale)} caption={`${invoiceCount} ${t('dash.invoicesRecorded')}`} color="green" />
+        <StatCard icon={WalletCards} label={t('dash.pending')} value={formatCurrencyShort(pending, locale)} caption={t('dash.awaiting')} color="amber" />
+      </div>
+      <div className="grid xl:grid-cols-5 gap-6">
+        <div className="card p-5 xl:col-span-3 card-hover">
+          <SectionTitle title={t('dash.stageDistribution')} subtitle={t('dash.stageSub')} action={<button className="btn-ghost btn-sm" onClick={onAdd}>{t('dash.refresh')} <RefreshCcw size={14} /></button>} />
+          <div className="space-y-3">
+            {statusCounts.map((s) => (
+              <div key={s.id} className="flex items-center gap-3">
+                <div className="w-36 sm:w-48 shrink-0 flex items-center gap-2 text-sm text-neutral-600"><span className={cls('w-2 h-2 rounded-full shrink-0', s.dot)} />{stageLabel(s.id, locale)}</div>
+                <div className="flex-1 h-2.5 rounded-full bg-neutral-100 overflow-hidden"><div className={cls('h-full rounded-full transition-all', s.dot)} style={{ width: `${(s.count / max) * 100}%` }} /></div>
+                <span className="w-6 text-left text-sm font-semibold text-neutral-700">{s.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card p-5 xl:col-span-2 card-hover">
+          <SectionTitle title={t('dash.financials')} subtitle={t('dash.financialsSub')} />
+          <div className="space-y-5">
+            <div>
+              <div className="flex items-center justify-between mb-2 text-sm"><span className="text-neutral-500">{t('dash.collectionRate')}</span><span className="font-bold text-success-600">{expected ? Math.round((collected / expected) * 100) : 0}%</span></div>
+              <div className="h-3 bg-neutral-100 rounded-full overflow-hidden"><div className="h-full bg-success-500 rounded-full" style={{ width: `${expected ? Math.min(100, (collected / expected) * 100) : 0}%` }} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-success-50 p-4"><p className="text-xs text-success-700">{t('dash.collectedLabel')}</p><p className="text-lg font-bold text-success-800 mt-1">{formatCurrencyShort(collected, locale)}</p></div>
+              <div className="rounded-xl bg-warning-50 p-4"><p className="text-xs text-warning-700">{t('dash.pendingLabel')}</p><p className="text-lg font-bold text-warning-800 mt-1">{formatCurrencyShort(pending, locale)}</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="card p-5 card-hover">
+        <SectionTitle title={t('dash.upcoming')} subtitle={t('dash.upcomingSub')} action={<button className="btn-ghost btn-sm" onClick={() => {}}>{t('dash.viewAll')} <ChevronLeft size={15} className="flip-x" /></button>} />
+        {upcoming.length ? (
+          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {upcoming.slice(0, 3).map((p) => {
+              const dl = relativeDeadline(p.submissionDeadline, locale);
+              return (
+                <button key={p.id} className="text-right rounded-xl border border-neutral-100 hover:border-primary-200 hover:bg-primary-50/40 p-4 transition-colors card-hover" onClick={() => onViewProject(p)}>
+                  <div className="flex items-start justify-between gap-2"><span className={cls('badge', dl.tone === 'danger' ? 'bg-error-50 text-error-700' : dl.tone === 'warning' ? 'bg-warning-50 text-warning-700' : 'bg-neutral-100 text-neutral-600')}>{dl.label}</span><CalendarDays size={17} className="text-neutral-400" /></div>
+                  <p className="font-semibold text-sm text-neutral-800 mt-3 line-clamp-1">{p.name}</p>
+                  <p className="text-xs text-neutral-500 mt-1">{p.client}</p>
+                  <p className="text-xs text-neutral-400 mt-2">{formatDateShort(p.submissionDeadline, locale)}</p>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-neutral-400 py-6 text-center">{t('dash.noDeadlines')}</p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function ProjectsView({ projects, onView, onEdit, onAdd }: { projects: Project[]; onView: (p: Project) => void; onEdit: (p: Project) => void; onAdd: () => void }) {
   const { t, locale } = useI18n();
   const [query, setQuery] = useState(''); const [stage, setStage] = useState<StageId | 'all'>('all'); const [view, setView] = useState<'kanban' | 'table'>('kanban');
   const filtered = useMemo(() => projects.filter((p) => { const q = query.toLowerCase(); return (!q || p.name.toLowerCase().includes(q) || p.client.toLowerCase().includes(q) || p.reference.toLowerCase().includes(q)) && (stage === 'all' || p.stage === stage); }), [projects, query, stage]);
-  return <div className="space-y-5 animate-fade-in"><div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-2xl font-extrabold text-neutral-900">{t('projects.title')}</h1><p className="text-sm text-neutral-500 mt-1">{t('projects.sub')}</p></div><button className="btn-primary btn-md" onClick={onAdd}><Plus size={17} />{t('projects.add')}</button></div><div className="card p-3 flex flex-wrap gap-3 items-center"><div className="relative flex-1 min-w-56"><Search size={17} className="absolute right-3 top-3 text-neutral-400" /><input className="input pr-10" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('projects.search')} /></div><div className="relative min-w-52"><Filter size={16} className="absolute right-3 top-3 text-neutral-400 pointer-events-none" /><select className="input pr-9 appearance-none" value={stage} onChange={(e) => setStage(e.target.value as StageId | 'all')}><option value="all">{t('projects.allStages')} ({projects.length})</option>{STAGES.map((s) => <option value={s.id} key={s.id}>{stageLabel(s.id, locale)} ({projects.filter((p) => p.stage === s.id).length})</option>)}</select><ChevronDown size={16} className="absolute left-3 top-3 text-neutral-400 pointer-events-none" /></div><div className="flex bg-neutral-100 rounded-lg p-1 mr-auto"><button className={cls('p-2 rounded-md transition-colors', view === 'kanban' ? 'bg-white text-primary-600 shadow-sm' : 'text-neutral-500')} onClick={() => setView('kanban')} title={t('projects.kanban')}><LayoutDashboard size={17} /></button><button className={cls('p-2 rounded-md transition-colors', view === 'table' ? 'bg-white text-primary-600 shadow-sm' : 'text-neutral-500')} onClick={() => setView('table')} title={t('projects.table')}><List size={17} /></button></div></div>{view === 'kanban' ? <div className="flex gap-4 overflow-x-auto pb-3 snap-x">{STAGES.map((s) => { const items = filtered.filter((p) => p.stage === s.id); return <div key={s.id} className="min-w-[280px] w-[280px] shrink-0 snap-start"><div className="flex items-center justify-between mb-3 px-1"><div className="flex items-center gap-2"><span className={cls('w-2.5 h-2.5 rounded-full', s.dot)} /><h3 className="text-sm font-bold text-neutral-700">{stageLabel(s.id, locale)}</h3></div><span className="text-xs font-semibold text-neutral-400 bg-neutral-100 rounded-full px-2 py-0.5">{items.length}</span></div><div className="space-y-3 min-h-32 p-2 rounded-2xl bg-neutral-100/70">{items.map((p) => <div key={p.id} className="bg-white rounded-xl border border-neutral-200/70 p-4 shadow-soft card-hover cursor-pointer" onClick={() => onView(p)}><div className="flex items-start justify-between gap-2"><span className="text-[10px] font-medium text-neutral-400" dir="ltr">{p.reference}</span><button onClick={(e) => { e.stopPropagation(); onEdit(p); }} className="text-neutral-400 hover:text-primary-600"><MoreHorizontal size={17} /></button></div><h4 className="font-bold text-sm text-neutral-800 mt-2 leading-6 line-clamp-2">{p.name}</h4><p className="text-xs text-neutral-500 mt-2 line-clamp-1">{p.client}</p><div className="flex items-center justify-between mt-4 pt-3 border-t border-neutral-100"><span className="text-xs font-semibold text-neutral-700">{formatCurrencyShort(p.amount, locale)}</span>{p.submissionDeadline && <span className={cls('text-[11px]', relativeDeadline(p.submissionDeadline, locale).tone === 'danger' ? 'text-error-600' : 'text-neutral-400')}><CalendarDays size={12} className="inline ml-1" />{formatDateShort(p.submissionDeadline, locale)}</span>}</div></div>)}{items.length === 0 && <div className="text-center py-8 text-xs text-neutral-400">{t('projects.noDeals')}</div>}</div></div>})}</div> : <div className="card overflow-hidden"><div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-neutral-50"><tr className="border-b border-neutral-200"><th className="text-right px-5 py-3 font-medium text-neutral-500">{t('projects.col.deal')}</th><th className="text-right px-5 py-3 font-medium text-neutral-500">{t('projects.col.client')}</th><th className="text-right px-5 py-3 font-medium text-neutral-500">{t('projects.col.stage')}</th><th className="text-right px-5 py-3 font-medium text-neutral-500">{t('projects.col.amount')}</th><th className="text-right px-5 py-3 font-medium text-neutral-500">{t('projects.col.deadline')}</th><th className="px-5 py-3" /></tr></thead><tbody>{filtered.map((p) => <tr key={p.id} className="border-b last:border-0 border-neutral-100 hover:bg-neutral-50/70 cursor-pointer" onClick={() => onView(p)}><td className="px-5 py-4"><p className="font-semibold text-neutral-800 max-w-xs truncate">{p.name}</p><p className="text-xs text-neutral-400 mt-1" dir="ltr">{p.reference}</p></td><td className="px-5 py-4 text-neutral-600">{p.client}</td><td className="px-5 py-4"><StageBadge stage={p.stage} locale={locale} /></td><td className="px-5 py-4 font-semibold text-neutral-700">{formatCurrency(p.amount, locale)}</td><td className="px-5 py-4 text-neutral-500">{formatDateShort(p.submissionDeadline, locale)}</td><td className="px-5 py-4"><IconButton label={t('projects.edit')} onClick={() => onEdit(p)}><Pencil size={15} /></IconButton></td></tr>)}</tbody></table></div>{!filtered.length && <div className="p-12 text-center text-sm text-neutral-400">{t('projects.noResults')}</div>}</div>}</div>;
+  return (
+    <div className="space-y-5 animate-fade-in">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-extrabold text-neutral-900">{t('projects.title')}</h1>
+          <p className="text-sm text-neutral-500 mt-1">{t('projects.sub')}</p>
+        </div>
+        <button 
+          className="flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200" 
+          onClick={onAdd}
+        >
+          <Plus size={20} className="shrink-0" />
+          <span>{t('projects.add')}</span>
+        </button>
+      </div>
+      <div className="card p-3 flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-56"><Search size={17} className="absolute right-3 top-3 text-neutral-400" /><input className="input pr-10" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('projects.search')} /></div>
+        <div className="relative min-w-52">
+          <Filter size={16} className="absolute right-3 top-3 text-neutral-400 pointer-events-none" />
+          <select className="input pr-9 appearance-none" value={stage} onChange={(e) => setStage(e.target.value as StageId | 'all')}>
+            <option value="all">{t('projects.allStages')} ({projects.length})</option>
+            {STAGES.map((s) => <option value={s.id} key={s.id}>{stageLabel(s.id, locale)} ({projects.filter((p) => p.stage === s.id).length})</option>)}
+          </select>
+          <ChevronDown size={16} className="absolute left-3 top-3 text-neutral-400 pointer-events-none" />
+        </div>
+        <div className="flex bg-neutral-100 rounded-lg p-1 mr-auto">
+          <button className={cls('p-2 rounded-md transition-colors', view === 'kanban' ? 'bg-white text-primary-600 shadow-sm' : 'text-neutral-500')} onClick={() => setView('kanban')} title={t('projects.kanban')}><LayoutDashboard size={17} /></button>
+          <button className={cls('p-2 rounded-md transition-colors', view === 'table' ? 'bg-white text-primary-600 shadow-sm' : 'text-neutral-500')} onClick={() => setView('table')} title={t('projects.table')}><List size={17} /></button>
+        </div>
+      </div>
+      {view === 'kanban' ? (
+        <div className="flex gap-4 overflow-x-auto pb-3 snap-x">
+          {STAGES.map((s) => {
+            const items = filtered.filter((p) => p.stage === s.id);
+            return (
+              <div key={s.id} className="min-w-[280px] w-[280px] shrink-0 snap-start">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <div className="flex items-center gap-2"><span className={cls('w-2.5 h-2.5 rounded-full', s.dot)} /><h3 className="text-sm font-bold text-neutral-700">{stageLabel(s.id, locale)}</h3></div>
+                  <span className="text-xs font-semibold text-neutral-400 bg-neutral-100 rounded-full px-2 py-0.5">{items.length}</span>
+                </div>
+                <div className="space-y-3 min-h-32 p-2 rounded-2xl bg-neutral-100/70">
+                  {items.map((p) => (
+                    <div key={p.id} className="bg-white rounded-xl border border-neutral-200/70 p-4 shadow-soft card-hover cursor-pointer" onClick={() => onView(p)}>
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-[10px] font-medium text-neutral-400" dir="ltr">{p.reference}</span>
+                        <button onClick={(e) => { e.stopPropagation(); onEdit(p); }} className="text-neutral-400 hover:text-primary-600"><MoreHorizontal size={17} /></button>
+                      </div>
+                      <h4 className="font-bold text-sm text-neutral-800 mt-2 leading-6 line-clamp-2">{p.name}</h4>
+                      <p className="text-xs text-neutral-500 mt-2 line-clamp-1">{p.client}</p>
+                      <div className="flex items-center justify-between mt-4 pt-3 border-t border-neutral-100">
+                        <span className="text-xs font-semibold text-neutral-700">{formatCurrencyShort(p.amount, locale)}</span>
+                        {p.submissionDeadline && <span className={cls('text-[11px]', relativeDeadline(p.submissionDeadline, locale).tone === 'danger' ? 'text-error-600' : 'text-neutral-400')}><CalendarDays size={12} className="inline ml-1" />{formatDateShort(p.submissionDeadline, locale)}</span>}
+                      </div>
+                    </div>
+                  ))}
+                  {items.length === 0 && <div className="text-center py-8 text-xs text-neutral-400">{t('projects.noDeals')}</div>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-neutral-50">
+                <tr className="border-b border-neutral-200">
+                  <th className="text-right px-5 py-3 font-medium text-neutral-500">{t('projects.col.deal')}</th>
+                  <th className="text-right px-5 py-3 font-medium text-neutral-500">{t('projects.col.client')}</th>
+                  <th className="text-right px-5 py-3 font-medium text-neutral-500">{t('projects.col.stage')}</th>
+                  <th className="text-right px-5 py-3 font-medium text-neutral-500">{t('projects.col.amount')}</th>
+                  <th className="text-right px-5 py-3 font-medium text-neutral-500">{t('projects.col.deadline')}</th>
+                  <th className="px-5 py-3" />
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((p) => (
+                  <tr key={p.id} className="border-b last:border-0 border-neutral-100 hover:bg-neutral-50/70 cursor-pointer" onClick={() => onView(p)}>
+                    <td className="px-5 py-4"><p className="font-semibold text-neutral-800 max-w-xs truncate">{p.name}</p><p className="text-xs text-neutral-400 mt-1" dir="ltr">{p.reference}</p></td>
+                    <td className="px-5 py-4 text-neutral-600">{p.client}</td>
+                    <td className="px-5 py-4"><StageBadge stage={p.stage} locale={locale} /></td>
+                    <td className="px-5 py-4 font-semibold text-neutral-700">{formatCurrency(p.amount, locale)}</td>
+                    <td className="px-5 py-4 text-neutral-500">{formatDateShort(p.submissionDeadline, locale)}</td>
+                    <td className="px-5 py-4"><IconButton label={t('projects.edit')} onClick={() => onEdit(p)}><Pencil size={15} /></IconButton></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!filtered.length && <div className="p-12 text-center text-sm text-neutral-400">{t('projects.noResults')}</div>}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: Project) => void }) {
@@ -332,7 +494,7 @@ export default function App() {
   };
 
   return (
-    <div className={cls('min-h-screen bg-slate-200 flex flex-col xl:flex-row text-neutral-800 font-sans', locale === 'ar' ? 'rtl' : 'ltr')} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+    <div className={cls('min-h-screen bg-neutral-100 flex flex-col xl:flex-row text-neutral-800 font-sans', locale === 'ar' ? 'rtl' : 'ltr')} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       <aside className="xl:w-72 bg-neutral-900 text-white p-6 flex flex-col justify-between shrink-0 shadow-lg">
         <div className="space-y-8">
           <div className="flex items-center gap-3">
