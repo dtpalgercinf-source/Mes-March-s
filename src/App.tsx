@@ -88,40 +88,42 @@ function ProjectForm({ initial, onSave, onClose }: { initial?: Project; onSave: 
   const req = <b className="text-error-500">*</b>;
   return (
     <form onSubmit={submit} className="p-6 space-y-6">
+      {/* الشريط الأفقي المستطيل باللون الأحمر الفاتح والمتناسق */}
       <div className="bg-red-50 p-4 rounded-xl border border-red-200 mb-2 flex items-center gap-2 text-red-700 shadow-2xs">
         <BriefcaseBusiness size={18} className="text-red-600 shrink-0" />
         <p className="text-xs font-bold tracking-wide">{t('form.addTitle') || 'معلومات الصفقة والمشروع الجديد'}</p>
       </div>
 
+      {/* حقول الإدخال بخطوط بارزة ومستطيلة الشكل متناسقة */}
       <div className="grid md:grid-cols-2 gap-5">
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><BriefcaseBusiness size={15} className="text-red-600" />{t('form.projectName')} {req}</span>
-          <input required className="input bg-neutral-50/70 border-neutral-300 focus:border-red-500 focus:bg-white shadow-2xs transition-colors" value={values.name} onChange={(e) => set('name', e.target.value)} placeholder={t('form.projectNamePh')} />
+          <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs transition-all py-2.5 px-3.5" value={values.name} onChange={(e) => set('name', e.target.value)} placeholder={t('form.projectNamePh')} />
         </label>
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><FileJson size={15} className="text-red-600" />{t('form.reference')} {req}</span>
-          <input required className="input bg-neutral-50/70 border-neutral-300 focus:border-red-500 focus:bg-white shadow-2xs font-mono transition-colors" value={values.reference} onChange={(e) => set('reference', e.target.value)} placeholder={t('form.referencePh')} dir="ltr" />
+          <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.reference} onChange={(e) => set('reference', e.target.value)} placeholder={t('form.referencePh')} dir="ltr" />
         </label>
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><ShieldCheck size={15} className="text-red-600" />{t('form.client')} {req}</span>
-          <input required className="input bg-neutral-50/70 border-neutral-300 focus:border-red-500 focus:bg-white shadow-2xs transition-colors" value={values.client} onChange={(e) => set('client', e.target.value)} placeholder={t('form.clientPh')} />
+          <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs transition-all py-2.5 px-3.5" value={values.client} onChange={(e) => set('client', e.target.value)} placeholder={t('form.clientPh')} />
         </label>
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CircleDollarSign size={15} className="text-red-600" />{t('form.amount')} {req}</span>
-          <input required min="0" type="number" className="input bg-neutral-50/70 border-neutral-300 focus:border-red-500 focus:bg-white shadow-2xs font-mono transition-colors" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" />
+          <input required min="0" type="number" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" />
         </label>
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-red-600" />{t('form.submissionDeadline')}</span>
-          <input type="date" className="input bg-neutral-50/70 border-neutral-300 focus:border-red-500 focus:bg-white shadow-2xs font-mono transition-colors" value={values.submissionDeadline} onChange={(e) => set('submissionDeadline', e.target.value)} dir="ltr" />
+          <input type="date" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.submissionDeadline} onChange={(e) => set('submissionDeadline', e.target.value)} dir="ltr" />
         </label>
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-red-600" />{t('form.startDate')}</span>
-          <input type="date" className="input bg-neutral-50/70 border-neutral-300 focus:border-red-500 focus:bg-white shadow-2xs font-mono transition-colors" value={values.startDate} onChange={(e) => set('startDate', e.target.value)} dir="ltr" />
+          <input type="date" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.startDate} onChange={(e) => set('startDate', e.target.value)} dir="ltr" />
         </label>
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Filter size={15} className="text-red-600" />{t('form.currentStage')}</span>
           <div className="relative">
-            <select className="input appearance-none bg-neutral-50/70 border-neutral-300 focus:border-red-500 focus:bg-white shadow-2xs cursor-pointer transition-colors" value={values.stage} onChange={(e) => set('stage', e.target.value)}>
+            <select className="input appearance-none bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs cursor-pointer transition-all py-2.5 px-3.5 w-full" value={values.stage} onChange={(e) => set('stage', e.target.value)}>
               {STAGES.map((s) => <option value={s.id} key={s.id}>{stageLabel(s.id, locale)}</option>)}
             </select>
             <ChevronDown size={17} className="absolute left-3 top-3.5 text-neutral-400 pointer-events-none" />
@@ -129,12 +131,12 @@ function ProjectForm({ initial, onSave, onClose }: { initial?: Project; onSave: 
         </label>
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><BriefcaseBusiness size={15} className="text-red-600" />{t('form.manager')}</span>
-          <input className="input bg-neutral-50/70 border-neutral-300 focus:border-red-500 focus:bg-white shadow-2xs transition-colors" value={values.manager} onChange={(e) => set('manager', e.target.value)} placeholder={t('form.managerPh')} />
+          <input className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs transition-all py-2.5 px-3.5" value={values.manager} onChange={(e) => set('manager', e.target.value)} placeholder={t('form.managerPh')} />
         </label>
       </div>
       <label className="space-y-1.5 block">
         <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Receipt size={15} className="text-red-600" />{t('form.notes')}</span>
-        <textarea className="input bg-neutral-50/70 border-neutral-300 focus:border-red-500 focus:bg-white shadow-2xs min-h-24 resize-y transition-colors" value={values.description} onChange={(e) => set('description', e.target.value)} placeholder={t('form.notesPh')} />
+        <textarea className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs min-h-24 resize-y transition-all p-3.5" value={values.description} onChange={(e) => set('description', e.target.value)} placeholder={t('form.notesPh')} />
       </label>
       <div className="flex items-center justify-start gap-3 border-t border-neutral-100 pt-5">
         <button type="submit" className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold rounded-xl shadow-md transition-all">
@@ -177,7 +179,6 @@ function ProjectDetail({ project, onClose, onEdit, onDelete, onAddInvoice, onUpd
   return (
     <ModalShell title={t('detail.title')} onClose={onClose} wide>
       <div className="p-6 space-y-6">
-        {/* الشريط العلوي في تفاصيل الصفقة بلون عنابي فاتح */}
         <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 shadow-2xs flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-3"><StageBadge stage={project.stage} locale={locale} /><span className="text-xs text-rose-700 font-mono bg-rose-100/70 px-2 py-0.5 rounded border border-rose-200" dir="ltr">{project.reference}</span></div>
@@ -206,7 +207,6 @@ function ProjectDetail({ project, onClose, onEdit, onDelete, onAddInvoice, onUpd
           <div><p className="text-neutral-400 text-xs mb-1">{t('detail.start')}</p><p className="font-medium text-neutral-700" dir="ltr">{formatDate(project.startDate, locale)}</p></div>
         </div>
         <div className="border-t border-neutral-100 pt-5">
-          {/* زر إضافة فاتورة بلون أخضر فاتح */}
           <SectionTitle 
             title={t('detail.invoices')} 
             subtitle={`${project.invoices.length} ${t('detail.invoicesCount')}`} 
