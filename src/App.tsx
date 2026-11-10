@@ -153,13 +153,11 @@ function InvoiceForm({ onSave, onClose }: { onSave: (invoice: Omit<Invoice, 'id'
   const set = (key: keyof typeof values, value: string) => setValues((v) => ({ ...v, [key]: value }));
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSave({ ...values, amount: Number(values.amount) || 0, status: values.status as InvoiceStatus }); }} className="p-6 space-y-6">
-      {/* الشريط العلوي الخاص بإضافة فاتورة بلون عنابي فاتح */}
       <div className="bg-rose-50 p-4 rounded-xl border border-rose-200 mb-2 flex items-center gap-2 text-rose-900 shadow-2xs">
         <Receipt size={18} className="text-rose-700 shrink-0" />
         <p className="text-xs font-bold tracking-wide">{t('form.addInvoiceTitle') || 'إضافة وتفاصيل الفاتورة الجديدة'}</p>
       </div>
 
-      {/* حقول الإدخال بخطوط بارزة وواضحة وألوان منسقة */}
       <div className="grid md:grid-cols-2 gap-5">
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Receipt size={15} className="text-rose-600" />{t('form.invoiceType')}</span>
@@ -468,56 +466,88 @@ function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: 
   const { t, locale } = useI18n();
   const reminders = projects.filter((p) => p.submissionDeadline).map((p) => ({ p, kind: 'deadline' as const, date: p.submissionDeadline! })).sort((a, b) => a.date.localeCompare(b.date));
   const unpaidInvoices = projects.flatMap((p) => p.invoices.filter((i) => i.status !== 'paid').map((i) => ({ p, i })));
+  
+  const urgentRemindersCount = reminders.filter((r) => { const d = relativeDeadline(r.date, locale); return d.tone === 'danger' || d.tone === 'warning'; }).length;
+
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-extrabold text-neutral-900">{t('deadlines.title')}</h1>
-        <p className="text-sm text-neutral-500 mt-1">{t('deadlines.sub')}</p>
+      {/* الشريط العلوي لصفحة المواعيد والإنذارات بلون عنابي فاتح */}
+      <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 shadow-2xs flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Bell size={20} className="text-rose-700" />
+            <h1 className="text-xl font-extrabold text-rose-950">{t('deadlines.title')}</h1>
+          </div>
+          <p className="text-sm text-rose-800/80 font-medium">{t('deadlines.sub')}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1 bg-rose-100 text-rose-800 text-xs font-bold rounded-full border border-rose-200">
+            {urgentRemindersCount} {t('deadlines.upcoming30') || 'إنذارات عاجلة'}
+          </span>
+        </div>
       </div>
+
+      {/* بطاقات الإحصائيات مصنفة بألوان واضحة */}
       <div className="grid md:grid-cols-3 gap-4">
-        <div className="card p-5 border-r-4 border-r-error-400 card-hover border border-neutral-100">
+        <div className="card p-5 border-r-4 border-r-rose-500 bg-rose-50/30 card-hover border border-rose-100 shadow-2xs">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-neutral-500">{t('deadlines.upcoming30')}</p>
-              <p className="text-2xl font-bold text-neutral-900 mt-2">{reminders.filter((r) => { const d = relativeDeadline(r.date, locale); return d.tone === 'danger' || d.tone === 'warning'; }).length}</p>
+              <p className="text-sm text-rose-900 font-semibold">{t('deadlines.upcoming30')}</p>
+              <p className="text-2xl font-extrabold text-rose-950 mt-2">{urgentRemindersCount}</p>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-error-50 text-error-600 flex items-center justify-center shadow-2xs"><AlertCircle size={21} /></div>
+            <div className="w-11 h-11 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shadow-2xs"><AlertCircle size={21} /></div>
           </div>
         </div>
-        <div className="card p-5 border-r-4 border-r-warning-400 card-hover border border-neutral-100">
+        <div className="card p-5 border-r-4 border-r-amber-500 bg-amber-50/30 card-hover border border-amber-100 shadow-2xs">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-neutral-500">{t('deadlines.unpaidInvoices')}</p>
-              <p className="text-2xl font-bold text-neutral-900 mt-2">{unpaidInvoices.length}</p>
+              <p className="text-sm text-amber-900 font-semibold">{t('deadlines.unpaidInvoices')}</p>
+              <p className="text-2xl font-extrabold text-amber-950 mt-2">{unpaidInvoices.length}</p>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-warning-50 text-warning-600 flex items-center justify-center shadow-2xs"><Receipt size={21} /></div>
+            <div className="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shadow-2xs"><Receipt size={21} /></div>
           </div>
         </div>
-        <div className="card p-5 border-r-4 border-r-success-400 card-hover border border-neutral-100">
+        <div className="card p-5 border-r-4 border-r-emerald-500 bg-emerald-50/30 card-hover border border-emerald-100 shadow-2xs">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-neutral-500">{t('deadlines.tracked')}</p>
-              <p className="text-2xl font-bold text-neutral-900 mt-2">{projects.length - reminders.length}</p>
+              <p className="text-sm text-emerald-900 font-semibold">{t('deadlines.tracked')}</p>
+              <p className="text-2xl font-extrabold text-emerald-950 mt-2">{projects.length - reminders.length}</p>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-success-50 text-success-600 flex items-center justify-center shadow-2xs"><CheckCircle2 size={21} /></div>
+            <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-2xs"><CheckCircle2 size={21} /></div>
           </div>
         </div>
       </div>
+
+      {/* قسم الجداول والبطاقات بتصنيف ألوان متناسق وواضح */}
       <div className="grid xl:grid-cols-2 gap-6">
-        <div className="card p-5 card-hover border border-neutral-100">
+        <div className="card p-5 card-hover border border-neutral-100 bg-white shadow-2xs">
           <SectionTitle title={t('deadlines.submissionDeadlines')} subtitle={t('deadlines.sortedByDate')} />
           {reminders.length ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {reminders.map(({ p, date }) => {
                 const dl = relativeDeadline(date, locale);
+                const isUrgent = dl.tone === 'danger' || dl.tone === 'warning';
                 return (
-                  <button key={p.id} onClick={() => onView(p)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-neutral-50 text-right transition-colors border border-transparent hover:border-neutral-200">
-                    <div className={cls('w-9 h-9 rounded-lg flex items-center justify-center shrink-0', dl.tone === 'danger' ? 'bg-error-50 text-error-600' : dl.tone === 'warning' ? 'bg-warning-50 text-warning-600' : 'bg-neutral-100 text-neutral-500')}><CalendarDays size={17} /></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-neutral-700 truncate">{p.name}</p>
-                      <p className="text-xs text-neutral-400 mt-1 font-mono" dir="ltr">{p.reference} · {formatDateShort(date, locale)}</p>
+                  <button 
+                    key={p.id} 
+                    onClick={() => onView(p)} 
+                    className={cls(
+                      'w-full flex items-center gap-3 p-3.5 rounded-xl text-right transition-all border shadow-2xs',
+                      isUrgent 
+                        ? 'bg-rose-50/60 border-rose-200 hover:bg-rose-100/70 text-rose-950' 
+                        : 'bg-emerald-50/40 border-emerald-100 hover:bg-emerald-50/80 text-neutral-800'
+                    )}
+                  >
+                    <div className={cls('w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs', isUrgent ? 'bg-rose-200 text-rose-800' : 'bg-emerald-100 text-emerald-700')}>
+                      <CalendarDays size={18} />
                     </div>
-                    <span className={cls('text-xs shrink-0 font-medium', dl.tone === 'danger' ? 'text-error-600' : dl.tone === 'warning' ? 'text-warning-600' : 'text-neutral-400')}>{dl.label}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold truncate">{p.name}</p>
+                      <p className="text-xs text-neutral-500 mt-1 font-mono" dir="ltr">{p.reference} · {formatDateShort(date, locale)}</p>
+                    </div>
+                    <span className={cls('text-xs shrink-0 font-bold px-2.5 py-1 rounded-lg border shadow-2xs', isUrgent ? 'bg-rose-100 text-rose-700 border-rose-300' : 'bg-emerald-100 text-emerald-700 border-emerald-200')}>
+                      {dl.label}
+                    </span>
                   </button>
                 );
               })}
@@ -526,20 +556,29 @@ function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: 
             <p className="text-sm text-neutral-400 text-center py-8">{t('deadlines.noDeadlines')}</p>
           )}
         </div>
-        <div className="card p-5 card-hover border border-neutral-100">
+
+        <div className="card p-5 card-hover border border-neutral-100 bg-white shadow-2xs">
           <SectionTitle title={t('deadlines.invoicesProcessing')} subtitle={t('deadlines.needsFollowup')} />
           {unpaidInvoices.length ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {unpaidInvoices.map(({ p, i }) => (
-                <button key={i.id} onClick={() => onView(p)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-neutral-50 text-right transition-colors border border-transparent hover:border-neutral-200">
-                  <div className="w-9 h-9 rounded-lg bg-warning-50 text-warning-600 flex items-center justify-center shrink-0 shadow-2xs"><Receipt size={17} /></div>
+                <button 
+                  key={i.id} 
+                  onClick={() => onView(p)} 
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-amber-50/50 border border-amber-200 hover:bg-amber-100/60 text-right transition-all shadow-2xs"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center shrink-0 shadow-2xs">
+                    <Receipt size={18} />
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-neutral-700 truncate">{i.label}</p>
-                    <p className="text-xs text-neutral-400 mt-1 truncate">{p.name}</p>
+                    <p className="text-sm font-bold text-amber-950 truncate">{i.label}</p>
+                    <p className="text-xs text-neutral-600 mt-1 truncate">{p.name}</p>
                   </div>
                   <div className="text-left shrink-0">
-                    <p className="text-sm font-semibold text-neutral-700 font-mono">{formatCurrencyShort(i.amount, locale)}</p>
-                    <p className="text-xs text-neutral-400 mt-1">{invoiceStatusLabel(i.status, locale)}</p>
+                    <p className="text-sm font-extrabold text-amber-900 font-mono">{formatCurrencyShort(i.amount, locale)}</p>
+                    <span className="inline-block text-[11px] font-bold text-amber-800 bg-amber-200/70 px-2 py-0.5 rounded border border-amber-300 mt-1">
+                      {invoiceStatusLabel(i.status, locale)}
+                    </span>
                   </div>
                 </button>
               ))}
