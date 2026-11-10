@@ -88,56 +88,56 @@ function ProjectForm({ initial, onSave, onClose }: { initial?: Project; onSave: 
   const req = <b className="text-error-500">*</b>;
   return (
     <form onSubmit={submit} className="p-6 space-y-6">
-      <div className="bg-red-50 p-4 rounded-xl border border-red-200 mb-2 flex items-center gap-2 text-red-700 shadow-2xs">
-        <BriefcaseBusiness size={18} className="text-red-600 shrink-0" />
+      <div className="bg-neutral-100 p-4 rounded-xl border border-neutral-200 mb-2 flex items-center gap-2 text-neutral-700 shadow-2xs">
+        <BriefcaseBusiness size={18} className="text-neutral-600 shrink-0" />
         <p className="text-xs font-bold tracking-wide">{t('form.addTitle') || 'معلومات الصفقة والمشروع الجديد'}</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-5">
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><BriefcaseBusiness size={15} className="text-red-600" />{t('form.projectName')} {req}</span>
-          <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs transition-all py-2.5 px-3.5" value={values.name} onChange={(e) => set('name', e.target.value)} placeholder={t('form.projectNamePh')} />
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><BriefcaseBusiness size={15} className="text-neutral-500" />{t('form.projectName')} {req}</span>
+          <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs transition-all py-2.5 px-3.5" value={values.name} onChange={(e) => set('name', e.target.value)} placeholder={t('form.projectNamePh')} />
         </label>
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><FileJson size={15} className="text-red-600" />{t('form.reference')} {req}</span>
-          <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.reference} onChange={(e) => set('reference', e.target.value)} placeholder={t('form.referencePh')} dir="ltr" />
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><FileJson size={15} className="text-neutral-500" />{t('form.reference')} {req}</span>
+          <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.reference} onChange={(e) => set('reference', e.target.value)} placeholder={t('form.referencePh')} dir="ltr" />
         </label>
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><ShieldCheck size={15} className="text-red-600" />{t('form.client')} {req}</span>
-          <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs transition-all py-2.5 px-3.5" value={values.client} onChange={(e) => set('client', e.target.value)} placeholder={t('form.clientPh')} />
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><ShieldCheck size={15} className="text-neutral-500" />{t('form.client')} {req}</span>
+          <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs transition-all py-2.5 px-3.5" value={values.client} onChange={(e) => set('client', e.target.value)} placeholder={t('form.clientPh')} />
         </label>
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CircleDollarSign size={15} className="text-red-600" />{t('form.amount')} {req}</span>
-          <input required min="0" type="number" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" />
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CircleDollarSign size={15} className="text-neutral-500" />{t('form.amount')} {req}</span>
+          <input required min="0" type="number" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" />
         </label>
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-red-600" />{t('form.submissionDeadline')}</span>
-          <input type="date" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.submissionDeadline} onChange={(e) => set('submissionDeadline', e.target.value)} dir="ltr" />
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-neutral-500" />{t('form.submissionDeadline')}</span>
+          <input type="date" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.submissionDeadline} onChange={(e) => set('submissionDeadline', e.target.value)} dir="ltr" />
         </label>
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-red-600" />{t('form.startDate')}</span>
-          <input type="date" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.startDate} onChange={(e) => set('startDate', e.target.value)} dir="ltr" />
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-neutral-500" />{t('form.startDate')}</span>
+          <input type="date" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.startDate} onChange={(e) => set('startDate', e.target.value)} dir="ltr" />
         </label>
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Filter size={15} className="text-red-600" />{t('form.currentStage')}</span>
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Filter size={15} className="text-neutral-500" />{t('form.currentStage')}</span>
           <div className="relative">
-            <select className="input appearance-none bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs cursor-pointer transition-all py-2.5 px-3.5 w-full" value={values.stage} onChange={(e) => set('stage', e.target.value)}>
+            <select className="input appearance-none bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs cursor-pointer transition-all py-2.5 px-3.5 w-full" value={values.stage} onChange={(e) => set('stage', e.target.value)}>
               {STAGES.map((s) => <option value={s.id} key={s.id}>{stageLabel(s.id, locale)}</option>)}
             </select>
             <ChevronDown size={17} className="absolute left-3 top-3.5 text-neutral-400 pointer-events-none" />
           </div>
         </label>
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><BriefcaseBusiness size={15} className="text-red-600" />{t('form.manager')}</span>
-          <input className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs transition-all py-2.5 px-3.5" value={values.manager} onChange={(e) => set('manager', e.target.value)} placeholder={t('form.managerPh')} />
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><BriefcaseBusiness size={15} className="text-neutral-500" />{t('form.manager')}</span>
+          <input className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs transition-all py-2.5 px-3.5" value={values.manager} onChange={(e) => set('manager', e.target.value)} placeholder={t('form.managerPh')} />
         </label>
       </div>
       <label className="space-y-1.5 block">
-        <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Receipt size={15} className="text-red-600" />{t('form.notes')}</span>
-        <textarea className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-red-500 focus:bg-white rounded-xl shadow-2xs min-h-24 resize-y transition-all p-3.5" value={values.description} onChange={(e) => set('description', e.target.value)} placeholder={t('form.notesPh')} />
+        <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Receipt size={15} className="text-neutral-500" />{t('form.notes')}</span>
+        <textarea className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs min-h-24 resize-y transition-all p-3.5" value={values.description} onChange={(e) => set('description', e.target.value)} placeholder={t('form.notesPh')} />
       </label>
       <div className="flex items-center justify-start gap-3 border-t border-neutral-100 pt-5">
-        <button type="submit" className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold rounded-xl shadow-md transition-all">
+        <button type="submit" className="flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl shadow-md transition-all">
           <Check size={18} />
           <span>{initial ? t('form.save') : t('form.add')}</span>
         </button>
@@ -153,41 +153,41 @@ function InvoiceForm({ onSave, onClose }: { onSave: (invoice: Omit<Invoice, 'id'
   const set = (key: keyof typeof values, value: string) => setValues((v) => ({ ...v, [key]: value }));
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSave({ ...values, amount: Number(values.amount) || 0, status: values.status as InvoiceStatus }); }} className="p-6 space-y-6">
-      <div className="bg-rose-50 p-4 rounded-xl border border-rose-200 mb-2 flex items-center gap-2 text-rose-900 shadow-2xs">
-        <Receipt size={18} className="text-rose-700 shrink-0" />
+      <div className="bg-neutral-100 p-4 rounded-xl border border-neutral-200 mb-2 flex items-center gap-2 text-neutral-700 shadow-2xs">
+        <Receipt size={18} className="text-neutral-600 shrink-0" />
         <p className="text-xs font-bold tracking-wide">{t('form.addInvoiceTitle') || 'إضافة وتفاصيل الفاتورة الجديدة'}</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-5">
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Receipt size={15} className="text-rose-600" />{t('form.invoiceType')}</span>
-          <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-rose-500 focus:bg-white rounded-xl shadow-2xs transition-all py-2.5 px-3.5" value={values.label} onChange={(e) => set('label', e.target.value)} placeholder={t('form.invoiceTypePh')} />
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Receipt size={15} className="text-neutral-500" />{t('form.invoiceType')}</span>
+          <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs transition-all py-2.5 px-3.5" value={values.label} onChange={(e) => set('label', e.target.value)} placeholder={t('form.invoiceTypePh')} />
         </label>
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CircleDollarSign size={15} className="text-rose-600" />{t('form.invoiceAmount')}</span>
-          <input required min="0" type="number" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-rose-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" />
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CircleDollarSign size={15} className="text-neutral-500" />{t('form.invoiceAmount')}</span>
+          <input required min="0" type="number" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" />
         </label>
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Filter size={15} className="text-rose-600" />{t('form.invoiceStatus')}</span>
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Filter size={15} className="text-neutral-500" />{t('form.invoiceStatus')}</span>
           <div className="relative">
-            <select className="input appearance-none bg-neutral-50/80 border-2 border-neutral-300 focus:border-rose-500 focus:bg-white rounded-xl shadow-2xs cursor-pointer transition-all py-2.5 px-3.5 w-full" value={values.status} onChange={(e) => set('status', e.target.value)}>
+            <select className="input appearance-none bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs cursor-pointer transition-all py-2.5 px-3.5 w-full" value={values.status} onChange={(e) => set('status', e.target.value)}>
               {INVOICE_STATUSES.map((s) => <option value={s.id} key={s.id}>{invoiceStatusLabel(s.id, locale)}</option>)}
             </select>
             <ChevronDown size={17} className="absolute left-3 top-3.5 text-neutral-400 pointer-events-none" />
           </div>
         </label>
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-rose-600" />{t('form.submittedDate')}</span>
-          <input type="date" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-rose-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.submittedDate} onChange={(e) => set('submittedDate', e.target.value)} dir="ltr" />
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-neutral-500" />{t('form.submittedDate')}</span>
+          <input type="date" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.submittedDate} onChange={(e) => set('submittedDate', e.target.value)} dir="ltr" />
         </label>
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-rose-600" />{t('form.paidDate')}</span>
-          <input type="date" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-rose-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.paidDate} onChange={(e) => set('paidDate', e.target.value)} dir="ltr" />
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-neutral-500" />{t('form.paidDate')}</span>
+          <input type="date" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.paidDate} onChange={(e) => set('paidDate', e.target.value)} dir="ltr" />
         </label>
       </div>
       <label className="space-y-1.5 block">
-        <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Receipt size={15} className="text-rose-600" />{t('form.invoiceNotes')}</span>
-        <textarea className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-rose-500 focus:bg-white rounded-xl shadow-2xs min-h-20 resize-y transition-all p-3.5" value={values.notes} onChange={(e) => set('notes', e.target.value)} placeholder="..." />
+        <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Receipt size={15} className="text-neutral-500" />{t('form.invoiceNotes')}</span>
+        <textarea className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs min-h-20 resize-y transition-all p-3.5" value={values.notes} onChange={(e) => set('notes', e.target.value)} placeholder="..." />
       </label>
       <div className="flex items-center justify-start gap-3 border-t border-neutral-100 pt-5">
         <button className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all" type="submit"><Check size={18} /><span>{t('form.addInvoice')}</span></button>
@@ -205,15 +205,15 @@ function ProjectDetail({ project, onClose, onEdit, onDelete, onAddInvoice, onUpd
   return (
     <ModalShell title={t('detail.title')} onClose={onClose} wide>
       <div className="p-6 space-y-6">
-        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 shadow-2xs flex flex-wrap items-start justify-between gap-4">
+        <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-5 shadow-2xs flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-3"><StageBadge stage={project.stage} locale={locale} /><span className="text-xs text-rose-700 font-mono bg-rose-100/70 px-2 py-0.5 rounded border border-rose-200" dir="ltr">{project.reference}</span></div>
-            <h1 className="text-xl font-extrabold text-rose-950">{project.name}</h1>
-            <p className="text-sm text-rose-800/80 mt-2 flex items-center gap-2 font-medium"><BriefcaseBusiness size={15} className="text-rose-600" />{project.client}</p>
+            <div className="flex items-center gap-2 mb-3"><StageBadge stage={project.stage} locale={locale} /><span className="text-xs text-neutral-600 font-mono bg-neutral-200 px-2 py-0.5 rounded border border-neutral-300" dir="ltr">{project.reference}</span></div>
+            <h1 className="text-xl font-extrabold text-neutral-900">{project.name}</h1>
+            <p className="text-sm text-neutral-600 mt-2 flex items-center gap-2 font-medium"><BriefcaseBusiness size={15} className="text-neutral-500" />{project.client}</p>
           </div>
           <div className="flex gap-2">
             <button className="btn-danger btn-sm flex items-center gap-1.5 shadow-sm" onClick={onDelete}><Trash2 size={15} />{t('detail.delete')}</button>
-            <button className="btn-secondary btn-sm flex items-center gap-1.5 shadow-sm bg-white text-rose-900 border-rose-200 hover:bg-rose-100" onClick={onEdit}><Pencil size={15} />{t('detail.edit')}</button>
+            <button className="btn-secondary btn-sm flex items-center gap-1.5 shadow-sm bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-100" onClick={onEdit}><Pencil size={15} />{t('detail.edit')}</button>
           </div>
         </div>
 
@@ -298,7 +298,7 @@ function Dashboard({ projects, onViewProject, onAdd }: { projects: Project[]; on
           <p className="text-sm text-neutral-500 mt-1">{t('app.welcomeSub')}</p>
         </div>
         <button 
-          className="flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200" 
+          className="flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200" 
           onClick={onAdd}
         >
           <Plus size={20} className="shrink-0" />
@@ -374,7 +374,7 @@ function ProjectsView({ projects, onView, onEdit, onAdd }: { projects: Project[]
           <p className="text-sm text-neutral-500 mt-1">{t('projects.sub')}</p>
         </div>
         <button 
-          className="flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200" 
+          className="flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200" 
           onClick={onAdd}
         >
           <Plus size={20} className="shrink-0" />
@@ -471,54 +471,51 @@ function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: 
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* الشريط العلوي لصفحة المواعيد والإنذارات بلون عنابي فاتح */}
-      <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 shadow-2xs flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-5 shadow-2xs flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Bell size={20} className="text-rose-700" />
-            <h1 className="text-xl font-extrabold text-rose-950">{t('deadlines.title')}</h1>
+            <Bell size={20} className="text-neutral-700" />
+            <h1 className="text-xl font-extrabold text-neutral-900">{t('deadlines.title')}</h1>
           </div>
-          <p className="text-sm text-rose-800/80 font-medium">{t('deadlines.sub')}</p>
+          <p className="text-sm text-neutral-600 font-medium">{t('deadlines.sub')}</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="px-3 py-1 bg-rose-100 text-rose-800 text-xs font-bold rounded-full border border-rose-200">
+          <span className="px-3 py-1 bg-neutral-200 text-neutral-800 text-xs font-bold rounded-full border border-neutral-300">
             {urgentRemindersCount} {t('deadlines.upcoming30') || 'إنذارات عاجلة'}
           </span>
         </div>
       </div>
 
-      {/* بطاقات الإحصائيات مصنفة بألوان واضحة */}
       <div className="grid md:grid-cols-3 gap-4">
-        <div className="card p-5 border-r-4 border-r-rose-500 bg-rose-50/30 card-hover border border-rose-100 shadow-2xs">
+        <div className="card p-5 border-r-4 border-r-error-400 card-hover border border-neutral-100 shadow-2xs">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-rose-900 font-semibold">{t('deadlines.upcoming30')}</p>
-              <p className="text-2xl font-extrabold text-rose-950 mt-2">{urgentRemindersCount}</p>
+              <p className="text-sm text-neutral-500">{t('deadlines.upcoming30')}</p>
+              <p className="text-2xl font-bold text-neutral-900 mt-2">{urgentRemindersCount}</p>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shadow-2xs"><AlertCircle size={21} /></div>
+            <div className="w-11 h-11 rounded-xl bg-error-50 text-error-600 flex items-center justify-center shadow-2xs"><AlertCircle size={21} /></div>
           </div>
         </div>
-        <div className="card p-5 border-r-4 border-r-amber-500 bg-amber-50/30 card-hover border border-amber-100 shadow-2xs">
+        <div className="card p-5 border-r-4 border-r-warning-400 card-hover border border-neutral-100 shadow-2xs">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-amber-900 font-semibold">{t('deadlines.unpaidInvoices')}</p>
-              <p className="text-2xl font-extrabold text-amber-950 mt-2">{unpaidInvoices.length}</p>
+              <p className="text-sm text-neutral-500">{t('deadlines.unpaidInvoices')}</p>
+              <p className="text-2xl font-bold text-neutral-900 mt-2">{unpaidInvoices.length}</p>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shadow-2xs"><Receipt size={21} /></div>
+            <div className="w-11 h-11 rounded-xl bg-warning-50 text-warning-600 flex items-center justify-center shadow-2xs"><Receipt size={21} /></div>
           </div>
         </div>
-        <div className="card p-5 border-r-4 border-r-emerald-500 bg-emerald-50/30 card-hover border border-emerald-100 shadow-2xs">
+        <div className="card p-5 border-r-4 border-r-success-400 card-hover border border-neutral-100 shadow-2xs">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-emerald-900 font-semibold">{t('deadlines.tracked')}</p>
-              <p className="text-2xl font-extrabold text-emerald-950 mt-2">{projects.length - reminders.length}</p>
+              <p className="text-sm text-neutral-500">{t('deadlines.tracked')}</p>
+              <p className="text-2xl font-bold text-neutral-900 mt-2">{projects.length - reminders.length}</p>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-2xs"><CheckCircle2 size={21} /></div>
+            <div className="w-11 h-11 rounded-xl bg-success-50 text-success-600 flex items-center justify-center shadow-2xs"><CheckCircle2 size={21} /></div>
           </div>
         </div>
       </div>
 
-      {/* قسم الجداول والبطاقات بتصنيف ألوان متناسق وواضح */}
       <div className="grid xl:grid-cols-2 gap-6">
         <div className="card p-5 card-hover border border-neutral-100 bg-white shadow-2xs">
           <SectionTitle title={t('deadlines.submissionDeadlines')} subtitle={t('deadlines.sortedByDate')} />
@@ -531,21 +528,16 @@ function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: 
                   <button 
                     key={p.id} 
                     onClick={() => onView(p)} 
-                    className={cls(
-                      'w-full flex items-center gap-3 p-3.5 rounded-xl text-right transition-all border shadow-2xs',
-                      isUrgent 
-                        ? 'bg-rose-50/60 border-rose-200 hover:bg-rose-100/70 text-rose-950' 
-                        : 'bg-emerald-50/40 border-emerald-100 hover:bg-emerald-50/80 text-neutral-800'
-                    )}
+                    className="w-full flex items-center gap-3 p-3.5 rounded-xl text-right transition-all border border-neutral-200 bg-white hover:bg-neutral-50 shadow-2xs"
                   >
-                    <div className={cls('w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs', isUrgent ? 'bg-rose-200 text-rose-800' : 'bg-emerald-100 text-emerald-700')}>
+                    <div className={cls('w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs', isUrgent ? 'bg-error-50 text-error-600' : 'bg-neutral-100 text-neutral-500')}>
                       <CalendarDays size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold truncate">{p.name}</p>
+                      <p className="text-sm font-bold text-neutral-800 truncate">{p.name}</p>
                       <p className="text-xs text-neutral-500 mt-1 font-mono" dir="ltr">{p.reference} · {formatDateShort(date, locale)}</p>
                     </div>
-                    <span className={cls('text-xs shrink-0 font-bold px-2.5 py-1 rounded-lg border shadow-2xs', isUrgent ? 'bg-rose-100 text-rose-700 border-rose-300' : 'bg-emerald-100 text-emerald-700 border-emerald-200')}>
+                    <span className={cls('text-xs shrink-0 font-bold px-2.5 py-1 rounded-lg border shadow-2xs', isUrgent ? 'bg-error-50 text-error-700 border-error-200' : 'bg-neutral-100 text-neutral-700 border-neutral-200')}>
                       {dl.label}
                     </span>
                   </button>
@@ -565,18 +557,18 @@ function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: 
                 <button 
                   key={i.id} 
                   onClick={() => onView(p)} 
-                  className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-amber-50/50 border border-amber-200 hover:bg-amber-100/60 text-right transition-all shadow-2xs"
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white border border-neutral-200 hover:bg-neutral-50 text-right transition-all shadow-2xs"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center shrink-0 shadow-2xs">
+                  <div className="w-10 h-10 rounded-xl bg-warning-50 text-warning-600 flex items-center justify-center shrink-0 shadow-2xs">
                     <Receipt size={18} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-amber-950 truncate">{i.label}</p>
-                    <p className="text-xs text-neutral-600 mt-1 truncate">{p.name}</p>
+                    <p className="text-sm font-bold text-neutral-800 truncate">{i.label}</p>
+                    <p className="text-xs text-neutral-500 mt-1 truncate">{p.name}</p>
                   </div>
                   <div className="text-left shrink-0">
-                    <p className="text-sm font-extrabold text-amber-900 font-mono">{formatCurrencyShort(i.amount, locale)}</p>
-                    <span className="inline-block text-[11px] font-bold text-amber-800 bg-amber-200/70 px-2 py-0.5 rounded border border-amber-300 mt-1">
+                    <p className="text-sm font-extrabold text-neutral-900 font-mono">{formatCurrencyShort(i.amount, locale)}</p>
+                    <span className="inline-block text-[11px] font-bold text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200 mt-1">
                       {invoiceStatusLabel(i.status, locale)}
                     </span>
                   </div>
