@@ -88,13 +88,11 @@ function ProjectForm({ initial, onSave, onClose }: { initial?: Project; onSave: 
   const req = <b className="text-error-500">*</b>;
   return (
     <form onSubmit={submit} className="p-6 space-y-6">
-      {/* الشريط الأفقي المستطيل باللون الأحمر الفاتح والمتناسق */}
       <div className="bg-red-50 p-4 rounded-xl border border-red-200 mb-2 flex items-center gap-2 text-red-700 shadow-2xs">
         <BriefcaseBusiness size={18} className="text-red-600 shrink-0" />
         <p className="text-xs font-bold tracking-wide">{t('form.addTitle') || 'معلومات الصفقة والمشروع الجديد'}</p>
       </div>
 
-      {/* حقول الإدخال بخطوط بارزة ومستطيلة الشكل متناسقة */}
       <div className="grid md:grid-cols-2 gap-5">
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><BriefcaseBusiness size={15} className="text-red-600" />{t('form.projectName')} {req}</span>
@@ -154,18 +152,48 @@ function InvoiceForm({ onSave, onClose }: { onSave: (invoice: Omit<Invoice, 'id'
   const [values, setValues] = useState({ label: t('form.newInvoice'), amount: '', status: 'drafted' as InvoiceStatus, submittedDate: '', paidDate: '', notes: '' });
   const set = (key: keyof typeof values, value: string) => setValues((v) => ({ ...v, [key]: value }));
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSave({ ...values, amount: Number(values.amount) || 0, status: values.status as InvoiceStatus }); }} className="p-6 space-y-5">
-      <div className="grid md:grid-cols-2 gap-4">
-        <label><span className="label font-medium">{t('form.invoiceType')}</span><input required className="input bg-neutral-50/70 border-neutral-300 focus:border-red-500 shadow-sm" value={values.label} onChange={(e) => set('label', e.target.value)} placeholder={t('form.invoiceTypePh')} /></label>
-        <label><span className="label font-medium">{t('form.invoiceAmount')}</span><input required min="0" type="number" className="input bg-neutral-50/70 border-neutral-300 focus:border-red-500 shadow-sm" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" /></label>
-        <label><span className="label font-medium">{t('form.invoiceStatus')}</span><div className="relative"><select className="input appearance-none bg-neutral-50/70 border-neutral-300 focus:border-red-500 shadow-sm" value={values.status} onChange={(e) => set('status', e.target.value)}>{INVOICE_STATUSES.map((s) => <option value={s.id} key={s.id}>{invoiceStatusLabel(s.id, locale)}</option>)}</select><ChevronDown size={17} className="absolute left-3 top-3.5 text-neutral-400 pointer-events-none" /></div></label>
-        <label><span className="label font-medium">{t('form.submittedDate')}</span><input type="date" className="input bg-neutral-50/70 border-neutral-300 focus:border-red-500 shadow-sm" value={values.submittedDate} onChange={(e) => set('submittedDate', e.target.value)} dir="ltr" /></label>
-        <label><span className="label font-medium">{t('form.paidDate')}</span><input type="date" className="input bg-neutral-50/70 border-neutral-300 focus:border-red-500 shadow-sm" value={values.paidDate} onChange={(e) => set('paidDate', e.target.value)} dir="ltr" /></label>
+    <form onSubmit={(e) => { e.preventDefault(); onSave({ ...values, amount: Number(values.amount) || 0, status: values.status as InvoiceStatus }); }} className="p-6 space-y-6">
+      {/* الشريط العلوي الخاص بإضافة فاتورة بلون عنابي فاتح */}
+      <div className="bg-rose-50 p-4 rounded-xl border border-rose-200 mb-2 flex items-center gap-2 text-rose-900 shadow-2xs">
+        <Receipt size={18} className="text-rose-700 shrink-0" />
+        <p className="text-xs font-bold tracking-wide">{t('form.addInvoiceTitle') || 'إضافة وتفاصيل الفاتورة الجديدة'}</p>
       </div>
-      <label><span className="label font-medium">{t('form.invoiceNotes')}</span><textarea className="input bg-neutral-50/70 border-neutral-300 focus:border-red-500 shadow-sm min-h-20" value={values.notes} onChange={(e) => set('notes', e.target.value)} placeholder="..." /></label>
-      <div className="flex gap-3 border-t border-neutral-100 pt-5">
-        <button className="btn-primary btn-md flex items-center gap-2 shadow-sm" type="submit"><Check size={17} />{t('form.addInvoice')}</button>
-        <button type="button" className="btn-secondary btn-md shadow-sm" onClick={onClose}>{t('form.cancel')}</button>
+
+      {/* حقول الإدخال بخطوط بارزة وواضحة وألوان منسقة */}
+      <div className="grid md:grid-cols-2 gap-5">
+        <label className="space-y-1.5 block">
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Receipt size={15} className="text-rose-600" />{t('form.invoiceType')}</span>
+          <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-rose-500 focus:bg-white rounded-xl shadow-2xs transition-all py-2.5 px-3.5" value={values.label} onChange={(e) => set('label', e.target.value)} placeholder={t('form.invoiceTypePh')} />
+        </label>
+        <label className="space-y-1.5 block">
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CircleDollarSign size={15} className="text-rose-600" />{t('form.invoiceAmount')}</span>
+          <input required min="0" type="number" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-rose-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" />
+        </label>
+        <label className="space-y-1.5 block">
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Filter size={15} className="text-rose-600" />{t('form.invoiceStatus')}</span>
+          <div className="relative">
+            <select className="input appearance-none bg-neutral-50/80 border-2 border-neutral-300 focus:border-rose-500 focus:bg-white rounded-xl shadow-2xs cursor-pointer transition-all py-2.5 px-3.5 w-full" value={values.status} onChange={(e) => set('status', e.target.value)}>
+              {INVOICE_STATUSES.map((s) => <option value={s.id} key={s.id}>{invoiceStatusLabel(s.id, locale)}</option>)}
+            </select>
+            <ChevronDown size={17} className="absolute left-3 top-3.5 text-neutral-400 pointer-events-none" />
+          </div>
+        </label>
+        <label className="space-y-1.5 block">
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-rose-600" />{t('form.submittedDate')}</span>
+          <input type="date" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-rose-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.submittedDate} onChange={(e) => set('submittedDate', e.target.value)} dir="ltr" />
+        </label>
+        <label className="space-y-1.5 block">
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-rose-600" />{t('form.paidDate')}</span>
+          <input type="date" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-rose-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.paidDate} onChange={(e) => set('paidDate', e.target.value)} dir="ltr" />
+        </label>
+      </div>
+      <label className="space-y-1.5 block">
+        <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Receipt size={15} className="text-rose-600" />{t('form.invoiceNotes')}</span>
+        <textarea className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-rose-500 focus:bg-white rounded-xl shadow-2xs min-h-20 resize-y transition-all p-3.5" value={values.notes} onChange={(e) => set('notes', e.target.value)} placeholder="..." />
+      </label>
+      <div className="flex items-center justify-start gap-3 border-t border-neutral-100 pt-5">
+        <button className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all" type="submit"><Check size={18} /><span>{t('form.addInvoice')}</span></button>
+        <button type="button" className="btn-secondary btn-md shadow-2xs" onClick={onClose}>{t('form.cancel')}</button>
       </div>
     </form>
   );
