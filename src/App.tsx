@@ -41,7 +41,7 @@ import { usePwaInstall } from '@/lib/usePwaInstall';
 import { cls, formatCurrency, formatCurrencyShort, formatDate, formatDateShort, relativeDeadline } from '@/lib/format';
 import { useAppData } from '@/lib/storage';
 
-// مكتبة تصدير واستيراد Excel
+// مكتبة استيراد وتصدير Excel
 import * as XLSX from 'xlsx';
 
 type View = 'dashboard' | 'projects' | 'deadlines' | 'settings';
@@ -792,23 +792,23 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
   const exportExcel = () => {
     try {
       const projectsFlat = data.projects.map((p) => ({
-        'اسم المشروع': p.name,
-        'المرجع': p.reference,
-        'العميل': p.client,
-        'المبلغ (دج)': p.amount,
-        'المرحلة': stageLabel(p.stage, locale),
-        'المسؤول': p.manager,
-        'تاريخ التسليم': p.submissionDeadline,
-        'تاريخ البداية': p.startDate,
+        [locale === 'fr' ? 'Nom du Projet' : 'اسم المشروع']: p.name,
+        [locale === 'fr' ? 'Référence' : 'المرجع']: p.reference,
+        [locale === 'fr' ? 'Client' : 'العميل']: p.client,
+        [locale === 'fr' ? 'Montant (DZD)' : 'المبلغ (دج)']: p.amount,
+        [locale === 'fr' ? 'Étape' : 'المرحلة']: stageLabel(p.stage, locale),
+        [locale === 'fr' ? 'Responsable' : 'المسؤول']: p.manager,
+        [locale === 'fr' ? 'Date limite' : 'تاريخ التسليم']: p.submissionDeadline,
+        [locale === 'fr' ? 'Date de début' : 'تاريخ البداية']: p.startDate,
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(projectsFlat);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'الصفقات');
+      XLSX.utils.book_append_sheet(workbook, worksheet, locale === 'fr' ? 'Marchés' : 'الصفقات');
       XLSX.writeFile(workbook, `mes-marches-export-${new Date().toISOString().slice(0, 10)}.xlsx`);
-      setMessage('تم تصدير ملف Excel بنجاح!');
+      setMessage(locale === 'fr' ? 'Fichier Excel exporté avec succès !' : 'تم تصدير ملف Excel بنجاح!');
     } catch {
-      setMessage('حدث خطأ أثناء تصدير ملف Excel.');
+      setMessage(locale === 'fr' ? 'Erreur lors de l\'exportation du fichier Excel.' : 'حدث خطأ أثناء تصدير ملف Excel.');
     }
   };
 
@@ -820,44 +820,43 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
 
       const htmlContent = `
         <!DOCTYPE html>
-        <html lang="ar" dir="rtl">
+        <html lang="${locale}" dir="${locale === 'ar' ? 'rtl' : 'ltr'}">
         <head>
           <meta charset="UTF-8">
-          <title>تقرير صفقات الورشات</title>
+          <title>${locale === 'fr' ? 'Rapport des Marchés' : 'تقرير صفقات الورشات'}</title>
           <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 25px; direction: rtl; text-align: right; color: #1f2937; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 25px; direction: ${locale === 'ar' ? 'rtl' : 'ltr'}; text-align: ${locale === 'ar' ? 'right' : 'left'}; color: #1f2937; }
             h1 { text-align: center; color: #047857; margin-bottom: 8px; font-size: 24px; }
             .subtitle { text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 25px; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #e5e7eb; padding: 10px 12px; text-align: right; font-size: 13px; }
+            th, td { border: 1px solid #e5e7eb; padding: 10px 12px; text-align: ${locale === 'ar' ? 'right' : 'left'}; font-size: 13px; }
             th { background-color: #f3f4f6; color: #111827; font-weight: bold; }
             tr:nth-child(even) { background-color: #f9fafb; }
-            .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
           </style>
         </head>
         <body>
-          <h1>تقرير صفقات الورشات والمشاريع</h1>
-          <p class="subtitle">تاريخ التقرير: ${new Date().toLocaleDateString('ar-DZ')}</p>
+          <h1>${locale === 'fr' ? 'Rapport des Marchés et Chantiers' : 'تقرير صفقات الورشات والمشاريع'}</h1>
+          <p class="subtitle">${locale === 'fr' ? 'Date du rapport :' : 'تاريخ التقرير :'} ${new Date().toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'ar-DZ')}</p>
           <table>
             <thead>
               <tr>
-                <th>اسم المشروع</th>
-                <th>المرجع</th>
-                <th>العميل</th>
-                <th>المبلغ (دج)</th>
-                <th>المرحلة</th>
-                <th>آجال التسليم</th>
+                <th>${locale === 'fr' ? 'Nom du Projet' : 'اسم المشروع'}</th>
+                <th>${locale === 'fr' ? 'Référence' : 'المرجع'}</th>
+                <th>${locale === 'fr' ? 'Client' : 'العميل'}</th>
+                <th>${locale === 'fr' ? 'Montant (DZD)' : 'المبلغ (دج)'}</th>
+                <th>${locale === 'fr' ? 'Étape' : 'المرحلة'}</th>
+                <th>${locale === 'fr' ? 'Échéance' : 'آجال التسليم'}</th>
               </tr>
             </thead>
             <tbody>
               ${data.projects.map(p => `
                 <tr>
                   <td><b>${p.name}</b></td>
-                  <td dir="ltr" style="text-align:right; font-family: monospace;">${p.reference}</td>
+                  <td dir="ltr" style="text-align:${locale === 'ar' ? 'right' : 'left'}; font-family: monospace;">${p.reference}</td>
                   <td>${p.client}</td>
-                  <td font-family: monospace;">${p.amount.toLocaleString()}</td>
+                  <td style="font-family: monospace;">${p.amount.toLocaleString()}</td>
                   <td>${stageLabel(p.stage, locale)}</td>
-                  <td dir="ltr" style="text-align:right;">${p.submissionDeadline || '-'}</td>
+                  <td dir="ltr" style="text-align:${locale === 'ar' ? 'right' : 'left'};">${p.submissionDeadline || '-'}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -874,9 +873,9 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         printWindow.close();
       }, 300);
 
-      setMessage('تم فتح نافذة حفظ التقرير كـ PDF بنجاح!');
+      setMessage(locale === 'fr' ? 'Fenêtre d\'impression PDF ouverte avec succès !' : 'تم فتح نافذة حفظ التقرير كـ PDF بنجاح!');
     } catch {
-      setMessage('حدث خطأ أثناء تصدير التقرير.');
+      setMessage(locale === 'fr' ? 'Erreur lors de l\'exportation du rapport.' : 'حدث خطأ أثناء تصدير التقرير.');
     }
   };
 
@@ -895,14 +894,14 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
 
         const importedProjects: Project[] = jsonData.map((row, index) => ({
           id: `imported_${Date.now()}_${index}`,
-          name: row['اسم المشروع'] || row['name'] || 'مشروع مستورد',
-          reference: row['المرجع'] || row['reference'] || `REF-${index}`,
-          client: row['العميل'] || row['client'] || 'غير محدد',
-          amount: Number(row['المبلغ (دج)'] || row['amount'] || 0),
+          name: row['اسم المشروع'] || row['Nom du Projet'] || row['name'] || 'مشروع مستورد',
+          reference: row['المرجع'] || row['Référence'] || row['reference'] || `REF-${index}`,
+          client: row['العميل'] || row['Client'] || row['client'] || 'غير محدد',
+          amount: Number(row['المبلغ (دج)'] || row['Montant (DZD)'] || row['amount'] || 0),
           stage: 'consultation' as StageId,
-          manager: row['المسؤول'] || row['manager'] || '',
-          submissionDeadline: row['تاريخ التسليم'] || row['submissionDeadline'] || '',
-          startDate: row['تاريخ البداية'] || row['startDate'] || '',
+          manager: row['المسؤول'] || row['Responsable'] || row['manager'] || '',
+          submissionDeadline: row['تاريخ التسليم'] || row['Date limite'] || row['submissionDeadline'] || '',
+          startDate: row['تاريخ البداية'] || row['Date de début'] || row['startDate'] || '',
           invoices: [],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
@@ -910,12 +909,12 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
 
         if (importedProjects.length) {
           onImport({ ...data, projects: [...importedProjects, ...data.projects] });
-          setMessage('تم استيراد ملف Excel وإضافة الصفقات بنجاح!');
+          setMessage(locale === 'fr' ? 'Fichier Excel importé et marchés ajoutés avec succès !' : 'تم استيراد ملف Excel وإضافة الصفقات بنجاح!');
         } else {
-          setMessage('الملف فارغ أو لا يحتوي على أعمدة متوافقة.');
+          setMessage(locale === 'fr' ? 'Le fichier est vide ou ne contient pas de colonnes compatibles.' : 'الملف فارغ أو لا يحتوي على أعمدة متوافقة.');
         }
       } catch {
-        setMessage('فشل قراءة ملف Excel، تأكد من صحة الصيغة.');
+        setMessage(locale === 'fr' ? 'Échec de la lecture du fichier Excel.' : 'فشل قراءة ملف Excel، تأكد من صحة الصيغة.');
       }
     };
     reader.readAsArrayBuffer(file);
@@ -934,7 +933,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
             className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl border border-red-500 shadow-sm transition-all"
           >
             <LogOut size={15} />
-            <span>تسجيل الخروج</span>
+            <span>{locale === 'fr' ? 'Déconnexion' : 'تسجيل الخروج'}</span>
           </button>
         </div>
       </div>
@@ -947,17 +946,21 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
             <div className="w-10 h-10 rounded-xl bg-emerald-200 text-emerald-900 border-2 border-emerald-400 flex items-center justify-center shadow-2xs">
               <KeyRound size={20} />
             </div>
-            <span>أمان الحساب وتغيير بيانات الدخول</span>
+            <span>{locale === 'fr' ? 'Sécurité du compte et modification des identifiants' : 'أمان الحساب وتغيير بيانات الدخول'}</span>
           </div>
           <button
             onClick={onChangeCredentials}
             className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-sm transition-all border border-emerald-600 flex items-center gap-1.5"
           >
             <Pencil size={14} />
-            <span>تعديل الحساب</span>
+            <span>{locale === 'fr' ? 'Modifier le compte' : 'تعديل الحساب'}</span>
           </button>
         </h2>
-        <p className="text-xs text-neutral-600 font-medium">قم بتحديث اسم المستخدم أو الرقم السري الخاص بك لحماية البيانات الحساسة.</p>
+        <p className="text-xs text-neutral-600 font-medium">
+          {locale === 'fr' 
+            ? 'Mettez à jour votre nom d\'utilisateur ou votre mot de passe pour protéger vos données sensibles.' 
+            : 'قم بتحديث اسم المستخدم أو الرقم السري الخاص بك لحماية البيانات الحساسة.'}
+        </p>
       </div>
 
       {/* قسم إدارة الملفات (PDF & Excel) */}
@@ -966,16 +969,22 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
           <div className="w-10 h-10 rounded-xl bg-sky-200 text-sky-900 border-2 border-sky-400 flex items-center justify-center shadow-2xs">
             <FileSpreadsheet size={20} />
           </div>
-          <span>إدارة وتصدير بيانات الصفقات (PDF / Excel)</span>
+          <span>{locale === 'fr' ? 'Gestion et exportation des données (PDF / Excel)' : 'إدارة وتصدير بيانات الصفقات (PDF / Excel)'}</span>
         </h2>
         <div className="grid sm:grid-cols-2 gap-4">
-          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportExcel}><FileSpreadsheet size={18} className="text-emerald-700" />تصدير إلى Excel (.xlsx)</button>
-          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportPdf}><FileText size={18} className="text-rose-700" />تصدير تقرير PDF بالعربية</button>
+          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportExcel}>
+            <FileSpreadsheet size={18} className="text-emerald-700" />
+            {locale === 'fr' ? 'Exporter vers Excel (.xlsx)' : 'تصدير إلى Excel (.xlsx)'}
+          </button>
+          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportPdf}>
+            <FileText size={18} className="text-rose-700" />
+            {locale === 'fr' ? 'Exporter le rapport PDF' : 'تصدير تقرير PDF'}
+          </button>
         </div>
         <div className="pt-3 border-t-2 border-sky-200">
           <label className="w-full btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center cursor-pointer font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all">
             <Upload size={18} className="text-sky-700" />
-            استيراد البيانات من ملف Excel
+            {locale === 'fr' ? 'Importer les données depuis Excel' : 'استيراد البيانات من ملف Excel'}
             <input type="file" accept=".xlsx, .xls" className="hidden" onChange={importExcelFile} />
           </label>
         </div>
@@ -1124,9 +1133,9 @@ export default function App() {
           <div className="flex items-center justify-between gap-2">
             <button onClick={() => setView('settings')} title={t('nav.settings')} className="flex-1 p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-emerald-400 hover:text-emerald-300 transition-colors border border-emerald-600/30 shadow-2xs flex items-center justify-center gap-1.5 text-xs font-semibold">
               <SettingsIcon size={15} />
-              <span>الإعدادات</span>
+              <span>{locale === 'fr' ? 'Paramètres' : 'الإعدادات'}</span>
             </button>
-            <button onClick={handleLogout} title="تسجيل الخروج" className="p-2 rounded-xl bg-red-950/60 hover:bg-red-900 text-red-400 border border-red-800/60 transition-colors flex items-center justify-center">
+            <button onClick={handleLogout} title={locale === 'fr' ? 'Déconnexion' : 'تسجيل الخروج'} className="p-2 rounded-xl bg-red-950/60 hover:bg-red-900 text-red-400 border border-red-800/60 transition-colors flex items-center justify-center">
               <LogOut size={15} />
             </button>
           </div>
