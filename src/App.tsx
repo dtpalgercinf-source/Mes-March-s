@@ -41,6 +41,7 @@ import { useI18n, type Locale } from '@/lib/i18n';
 import { usePwaInstall } from '@/lib/usePwaInstall';
 import { cls, formatCurrency, formatCurrencyShort, formatDate, formatDateShort, relativeDeadline } from '@/lib/format';
 import { useAppData } from '@/lib/storage';
+import { setEncryptionKey } from '@/lib/db';
 
 // مكتبة استيراد وتصدير Excel
 import * as XLSX from 'xlsx';
@@ -107,6 +108,7 @@ function CredentialsModal({ onClose, onSuccess }: { onClose: () => void; onSucce
     localStorage.setItem('app_username', username.trim());
     if (password) {
       localStorage.setItem('app_password', password);
+      setEncryptionKey(password);
     }
     onSuccess('تم تحديث بيانات الدخول بنجاح!');
     onClose();
@@ -187,6 +189,8 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 
     if (username.trim() === savedUser && password === savedPass) {
       localStorage.setItem('app_authenticated', 'true');
+      // ربط كلمة المرور بمفتاح التشفير عند نجاح تسجيل الدخول
+      setEncryptionKey(password);
       onLogin();
     } else {
       setError('اسم المستخدم أو الرقم السري غير صحيح!');
@@ -921,7 +925,6 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
     reader.readAsArrayBuffer(file);
   };
 
-  // دالة رفع وتغيير الشعار
   const handleLogoUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1090,6 +1093,9 @@ export default function App() {
     const authStatus = localStorage.getItem('app_authenticated');
     if (authStatus === 'true') {
       setIsAuthenticated(true);
+      // تهيئة مفتاح التشفير من كلمة المرور المحفوظة عند إعادة تحميل الصفحة
+      const savedPass = localStorage.getItem('app_password') || '1234';
+      setEncryptionKey(savedPass);
     }
 
     const handleLogoUpdate = () => {
@@ -1153,18 +1159,15 @@ export default function App() {
         </div>
       )}
 
-      {/* الشريط الجانبي مع نظام حماية الشعار عبر علم الجزائر الرسمي كشعار احتياطي دائم */}
+      {/* الشريط الجانبي مع الشعار */}
       <aside className="xl:w-72 bg-neutral-900 text-white p-6 flex flex-col justify-between shrink-0 shadow-lg">
         <div className="space-y-8">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-950 p-1 flex items-center justify-center shadow-md border-2 border-emerald-500 overflow-hidden shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-white p-1 flex items-center justify-center shadow-md border-2 border-emerald-500 overflow-hidden shrink-0">
               <img 
-                src={customLogo || "/logo.png"} 
+                src={customLogo || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=60"} 
                 alt="DZ Suivi Logo" 
-                className="w-full h-full object-contain rounded-xl" 
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 600'><rect width='450' height='600' fill='%23006233'/><rect x='450' width='450' height='600' fill='%23FFFFFF'/><circle cx='450' cy='300' r='135' fill='%23D21034'/><path d='M480 230 A90 90 0 1 0 480 370 A110 110 0 1 1 480 230Z' fill='%23FFFFFF'/><polygon points='495,270 515,310 555,315 525,345 535,385 495,365 455,385 465,345 435,315 475,310' fill='%23D21034'/></svg>";
-                }}
+                className="w-full h-full object-cover rounded-xl" 
               />
             </div>
             <div>
