@@ -168,7 +168,7 @@ function CredentialsModal({ onClose, onSuccess }: { onClose: () => void; onSucce
             <Check size={18} />
             <span>حفظ التغييرات</span>
           </button>
-          <button type="button" className="btn-secondary btn-md shadow-2xs" onClose={onClose}>إلغاء</button>
+          <button type="button" className="btn-secondary btn-md shadow-2xs" onClick={onClose}>إلغاء</button>
         </div>
       </form>
     </ModalShell>
@@ -325,7 +325,7 @@ function ProjectForm({ initial, onSave, onClose }: { initial?: Project; onSave: 
           <Check size={18} />
           <span>{initial ? t('form.save') : t('form.add')}</span>
         </button>
-        <button type="button" className="btn-secondary btn-md shadow-2xs" onClose={onClose}>إلغاء</button>
+        <button type="button" className="btn-secondary btn-md shadow-2xs" onClick={onClose}>{t('form.cancel')}</button>
       </div>
     </form>
   );
@@ -375,7 +375,7 @@ function InvoiceForm({ onSave, onClose }: { onSave: (invoice: Omit<Invoice, 'id'
       </label>
       <div className="flex items-center justify-start gap-3 border-t border-neutral-100 pt-5">
         <button className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all" type="submit"><Check size={18} /><span>{t('form.addInvoice')}</span></button>
-        <button type="button" className="btn-secondary btn-md shadow-2xs" onClose={onClose}>{t('form.cancel')}</button>
+        <button type="button" className="btn-secondary btn-md shadow-2xs" onClick={onClose}>{t('form.cancel')}</button>
       </div>
     </form>
   );
@@ -1153,15 +1153,18 @@ export default function App() {
         </div>
       )}
 
-      {/* الشريط الجانبي مع العنصر البديل (Fallback SVG) لتجنب الفراغ الأبيض */}
+      {/* الشريط الجانبي مع نظام حماية الشعار عبر علم الجزائر الرسمي كشعار احتياطي دائم */}
       <aside className="xl:w-72 bg-neutral-900 text-white p-6 flex flex-col justify-between shrink-0 shadow-lg">
         <div className="space-y-8">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white p-1 flex items-center justify-center shadow-md border-2 border-emerald-500 overflow-hidden shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-950 p-1 flex items-center justify-center shadow-md border-2 border-emerald-500 overflow-hidden shrink-0">
               <img 
-                src={customLogo || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23047857'><path d='M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z'/></svg>"} 
+                src={customLogo || "/logo.png"} 
                 alt="DZ Suivi Logo" 
-                className="w-full h-full object-contain" 
+                className="w-full h-full object-contain rounded-xl" 
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 600'><rect width='450' height='600' fill='%23006233'/><rect x='450' width='450' height='600' fill='%23FFFFFF'/><circle cx='450' cy='300' r='135' fill='%23D21034'/><path d='M480 230 A90 90 0 1 0 480 370 A110 110 0 1 1 480 230Z' fill='%23FFFFFF'/><polygon points='495,270 515,310 555,315 525,345 535,385 495,365 455,385 465,345 435,315 475,310' fill='%23D21034'/></svg>";
+                }}
               />
             </div>
             <div>
