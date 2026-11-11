@@ -41,10 +41,8 @@ import { usePwaInstall } from '@/lib/usePwaInstall';
 import { cls, formatCurrency, formatCurrencyShort, formatDate, formatDateShort, relativeDeadline } from '@/lib/format';
 import { useAppData } from '@/lib/storage';
 
-// مكتبات استيراد وتصدير Excel و PDF
+// مكتبة تصدير واستيراد Excel
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 
 type View = 'dashboard' | 'projects' | 'deadlines' | 'settings';
 type Modal = { kind: 'project' | 'invoice' | 'detail' | 'credentials'; projectId?: string } | null;
@@ -798,7 +796,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         'المرجع': p.reference,
         'العميل': p.client,
         'المبلغ (دج)': p.amount,
-        'المرحلة': p.stage,
+        'المرحلة': stageLabel(p.stage, locale),
         'المسؤول': p.manager,
         'تاريخ التسليم': p.submissionDeadline,
         'تاريخ البداية': p.startDate,
@@ -814,33 +812,71 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
     }
   };
 
-  // تصدير تقرير PDF (مع إزالة النصوص العربية المعقدة لتجنب الحروف غير المفهومة وتصدير الجدول بالإنجليزية/الأرقام أو بشكل آمن)
+  // تصدير تقرير PDF يدعم اللغة العربية عبر الطباعة المباشرة من المتصفح
   const exportPdf = () => {
     try {
-      const doc = new jsPDF();
-      doc.setFont('helvetica', 'bold');
-      doc.text('Mes Marches - Projects Report', 14, 20);
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) return;
 
-      const tableData = data.projects.map((p) => [
-        p.name,
-        p.reference,
-        p.client,
-        p.amount.toString(),
-        p.stage,
-        p.submissionDeadline || '-'
-      ]);
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+          <meta charset="UTF-8">
+          <title>تقرير صفقات الورشات</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 25px; direction: rtl; text-align: right; color: #1f2937; }
+            h1 { text-align: center; color: #047857; margin-bottom: 8px; font-size: 24px; }
+            .subtitle { text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 25px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #e5e7eb; padding: 10px 12px; text-align: right; font-size: 13px; }
+            th { background-color: #f3f4f6; color: #111827; font-weight: bold; }
+            tr:nth-child(even) { background-color: #f9fafb; }
+            .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+          </style>
+        </head>
+        <body>
+          <h1>تقرير صفقات الورشات والمشاريع</h1>
+          <p class="subtitle">تاريخ التقرير: ${new Date().toLocaleDateString('ar-DZ')}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>اسم المشروع</th>
+                <th>المرجع</th>
+                <th>العميل</th>
+                <th>المبلغ (دج)</th>
+                <th>المرحلة</th>
+                <th>آجال التسليم</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.projects.map(p => `
+                <tr>
+                  <td><b>${p.name}</b></td>
+                  <td dir="ltr" style="text-align:right; font-family: monospace;">${p.reference}</td>
+                  <td>${p.client}</td>
+                  <td font-family: monospace;">${p.amount.toLocaleString()}</td>
+                  <td>${stageLabel(p.stage, locale)}</td>
+                  <td dir="ltr" style="text-align:right;">${p.submissionDeadline || '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `;
 
-      (doc as any).autoTable({
-        startY: 30,
-        head: [['Project', 'Ref', 'Client', 'Amount', 'Stage', 'Deadline']],
-        body: tableData,
-        styles: { font: 'helvetica', halign: 'left' }
-      });
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 300);
 
-      doc.save(`mes-marches-report-${new Date().toISOString().slice(0, 10)}.pdf`);
-      setMessage('تم تصدير ملف PDF بنجاح!');
+      setMessage('تم فتح نافذة حفظ التقرير كـ PDF بنجاح!');
     } catch {
-      setMessage('حدث خطأ أثناء تصدير ملف PDF.');
+      setMessage('حدث خطأ أثناء تصدير التقرير.');
     }
   };
 
@@ -924,7 +960,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         <p className="text-xs text-neutral-600 font-medium">قم بتحديث اسم المستخدم أو الرقم السري الخاص بك لحماية البيانات الحساسة.</p>
       </div>
 
-      {/* قسم إدارة الملفات (PDF & Excel فقط) */}
+      {/* قسم إدارة الملفات (PDF & Excel) */}
       <div className="card p-6 space-y-5 border-2 border-sky-300 bg-sky-50/40 card-hover shadow-2xs rounded-2xl">
         <h2 className="text-base font-extrabold text-sky-950 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-sky-200 text-sky-900 border-2 border-sky-400 flex items-center justify-center shadow-2xs">
@@ -934,7 +970,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         </h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportExcel}><FileSpreadsheet size={18} className="text-emerald-700" />تصدير إلى Excel (.xlsx)</button>
-          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportPdf}><FileText size={18} className="text-rose-700" />تصدير تقرير PDF</button>
+          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportPdf}><FileText size={18} className="text-rose-700" />تصدير تقرير PDF بالعربية</button>
         </div>
         <div className="pt-3 border-t-2 border-sky-200">
           <label className="w-full btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center cursor-pointer font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all">
