@@ -9,7 +9,6 @@ import {
   ChevronDown,
   ChevronLeft,
   CircleDollarSign,
-  Download,
   FileSpreadsheet,
   FileText,
   Filter,
@@ -42,7 +41,7 @@ import { usePwaInstall } from '@/lib/usePwaInstall';
 import { cls, formatCurrency, formatCurrencyShort, formatDate, formatDateShort, relativeDeadline } from '@/lib/format';
 import { useAppData } from '@/lib/storage';
 
-// 👉 مكتبات استيراد وتصدير Excel و PDF
+// مكتبات استيراد وتصدير Excel و PDF
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -815,12 +814,12 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
     }
   };
 
-  // تصدير تقرير PDF
+  // تصدير تقرير PDF (مع إزالة النصوص العربية المعقدة لتجنب الحروف غير المفهومة وتصدير الجدول بالإنجليزية/الأرقام أو بشكل آمن)
   const exportPdf = () => {
     try {
       const doc = new jsPDF();
       doc.setFont('helvetica', 'bold');
-      doc.text('Mes Marches - تقرير صفقات الورشات', 14, 20);
+      doc.text('Mes Marches - Projects Report', 14, 20);
 
       const tableData = data.projects.map((p) => [
         p.name,
@@ -833,9 +832,9 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
 
       (doc as any).autoTable({
         startY: 30,
-        head: [['المشروع', 'المرجع', 'العميل', 'المبلغ', 'المرحلة', 'الآجال']],
+        head: [['Project', 'Ref', 'Client', 'Amount', 'Stage', 'Deadline']],
         body: tableData,
-        styles: { font: 'helvetica', halign: 'right' }
+        styles: { font: 'helvetica', halign: 'left' }
       });
 
       doc.save(`mes-marches-report-${new Date().toISOString().slice(0, 10)}.pdf`);
