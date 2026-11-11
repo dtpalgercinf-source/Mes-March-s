@@ -33,6 +33,7 @@ import {
   User,
   WalletCards,
   X,
+  Image as ImageIcon,
 } from 'lucide-react';
 import type { AppData, Invoice, InvoiceStatus, Project, StageId } from '@/types';
 import { INVOICE_STATUSES, STAGES, invoiceStatusMeta, stageMeta } from '@/types';
@@ -167,7 +168,7 @@ function CredentialsModal({ onClose, onSuccess }: { onClose: () => void; onSucce
             <Check size={18} />
             <span>حفظ التغييرات</span>
           </button>
-          <button type="button" className="btn-secondary btn-md shadow-2xs" onClick={onClose}>إلغاء</button>
+          <button type="button" className="btn-secondary btn-md shadow-2xs" onClose={onClose}>إلغاء</button>
         </div>
       </form>
     </ModalShell>
@@ -324,7 +325,7 @@ function ProjectForm({ initial, onSave, onClose }: { initial?: Project; onSave: 
           <Check size={18} />
           <span>{initial ? t('form.save') : t('form.add')}</span>
         </button>
-        <button type="button" className="btn-secondary btn-md shadow-2xs" onClick={onClose}>{t('form.cancel')}</button>
+        <button type="button" className="btn-secondary btn-md shadow-2xs" onClose={onClose}>إلغاء</button>
       </div>
     </form>
   );
@@ -374,7 +375,7 @@ function InvoiceForm({ onSave, onClose }: { onSave: (invoice: Omit<Invoice, 'id'
       </label>
       <div className="flex items-center justify-start gap-3 border-t border-neutral-100 pt-5">
         <button className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all" type="submit"><Check size={18} /><span>{t('form.addInvoice')}</span></button>
-        <button type="button" className="btn-secondary btn-md shadow-2xs" onClick={onClose}>{t('form.cancel')}</button>
+        <button type="button" className="btn-secondary btn-md shadow-2xs" onClose={onClose}>{t('form.cancel')}</button>
       </div>
     </form>
   );
@@ -920,6 +921,28 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
     reader.readAsArrayBuffer(file);
   };
 
+  // دالة رفع وتغيير الشعار
+  const handleLogoUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      const base64Image = uploadEvent.target?.result as string;
+      if (base64Image) {
+        localStorage.setItem('app_custom_logo', base64Image);
+        window.dispatchEvent(new Event('logo_updated'));
+        setMessage(locale === 'fr' ? 'Logo mis à jour avec succès !' : 'تم تحديث شعار التطبيق بنجاح!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeCustomLogo = () => {
+    localStorage.removeItem('app_custom_logo');
+    window.dispatchEvent(new Event('logo_updated'));
+    setMessage(locale === 'fr' ? 'Logo réinitialisé par défaut.' : 'تمت إعادة الشعار للوضع الافتراضي.');
+  };
+
   return (
     <div className="space-y-6 max-w-4xl animate-fade-in">
       <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-900 border-2 border-emerald-600 rounded-2xl p-5 shadow-md flex flex-wrap items-center justify-between gap-4 text-white">
@@ -939,6 +962,35 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
       </div>
 
       {message && <div className="p-4 rounded-xl bg-primary-50 text-primary-700 text-sm font-medium flex items-center justify-between border border-primary-100"><span>{message}</span><button onClick={() => setMessage('')}><X size={16} /></button></div>}
+
+      <div className="card p-6 space-y-5 border-2 border-emerald-300 bg-emerald-50/40 card-hover shadow-2xs rounded-2xl">
+        <h2 className="text-base font-extrabold text-emerald-950 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-200 text-emerald-900 border-2 border-emerald-400 flex items-center justify-center shadow-2xs">
+            <ImageIcon size={20} />
+          </div>
+          <span>{locale === 'fr' ? 'Personnalisation du Logo de l\'application' : 'تخصيص ورفع شعار التطبيق'}</span>
+        </h2>
+        <p className="text-xs text-neutral-600 font-medium">
+          {locale === 'fr' 
+            ? 'Téléchargez une image pour remplacer le logo affiché dans la barre latérale.' 
+            : 'قم برفع صورة أو شعار (مثل شعار DZ Suivi) ليظهر بشكل دائم في الشريط الجانبي للتطبيق.'}
+        </p>
+        <div className="flex flex-wrap items-center gap-4 pt-2">
+          <label className="btn bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-3 cursor-pointer font-bold rounded-xl shadow-sm flex items-center gap-2 transition-all">
+            <Upload size={18} />
+            {locale === 'fr' ? 'Télécharger un nouveau logo' : 'رفع شعار جديد'}
+            <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+          </label>
+          <button 
+            type="button" 
+            onClick={removeCustomLogo}
+            className="px-4 py-3 bg-white hover:bg-red-50 text-red-600 border-2 border-red-300 font-bold rounded-xl shadow-2xs transition-all flex items-center gap-1.5 text-sm"
+          >
+            <Trash2 size={16} />
+            {locale === 'fr' ? 'Réinitialiser le logo' : 'إزالة الشعار المخصص'}
+          </button>
+        </div>
+      </div>
 
       <div className="card p-6 space-y-5 border-2 border-emerald-300 bg-emerald-50/40 card-hover shadow-2xs rounded-2xl">
         <h2 className="text-base font-extrabold text-emerald-950 flex items-center justify-between gap-3">
@@ -963,7 +1015,6 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         </p>
       </div>
 
-      {/* قسم إدارة الملفات (PDF & Excel) */}
       <div className="card p-6 space-y-5 border-2 border-sky-300 bg-sky-50/40 card-hover shadow-2xs rounded-2xl">
         <h2 className="text-base font-extrabold text-sky-950 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-sky-200 text-sky-900 border-2 border-sky-400 flex items-center justify-center shadow-2xs">
@@ -1032,12 +1083,20 @@ export default function App() {
   const [modal, setModal] = useState<Modal>(null);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  
+  const [customLogo, setCustomLogo] = useState<string>(() => localStorage.getItem('app_custom_logo') || '');
 
   useEffect(() => {
     const authStatus = localStorage.getItem('app_authenticated');
     if (authStatus === 'true') {
       setIsAuthenticated(true);
     }
+
+    const handleLogoUpdate = () => {
+      setCustomLogo(localStorage.getItem('app_custom_logo') || '');
+    };
+    window.addEventListener('logo_updated', handleLogoUpdate);
+    return () => window.removeEventListener('logo_updated', handleLogoUpdate);
   }, []);
 
   const handleLogout = () => {
@@ -1094,12 +1153,16 @@ export default function App() {
         </div>
       )}
 
-      {/* الشريط الجانبي مع دمج الشعار الرسمي الجديد DZ Suivi */}
+      {/* الشريط الجانبي مع العنصر البديل (Fallback SVG) لتجنب الفراغ الأبيض */}
       <aside className="xl:w-72 bg-neutral-900 text-white p-6 flex flex-col justify-between shrink-0 shadow-lg">
         <div className="space-y-8">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-white p-1 flex items-center justify-center shadow-md border-2 border-emerald-500 overflow-hidden shrink-0">
-              <img src="/logo.png" alt="DZ Suivi Logo" className="w-full h-full object-contain" />
+              <img 
+                src={customLogo || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23047857'><path d='M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z'/></svg>"} 
+                alt="DZ Suivi Logo" 
+                className="w-full h-full object-contain" 
+              />
             </div>
             <div>
               <h1 className="font-extrabold text-base tracking-tight">{t('app.title')}</h1>
