@@ -292,14 +292,12 @@ function Dashboard({ projects, onViewProject, onAdd }: { projects: Project[]; on
   const upcoming = projects.filter((p) => p.submissionDeadline).sort((a, b) => (a.submissionDeadline ?? '').localeCompare(b.submissionDeadline ?? '')).slice(0, 5);
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* شريط ترحيبي يتضمن العلم الوطني الجزائري بشكل متناسق وراقي */}
       <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-900 border-2 border-emerald-600 rounded-2xl p-5 shadow-md flex flex-wrap items-center justify-between gap-4 text-white">
         <div>
           <h1 className="text-2xl font-black tracking-tight">{t('app.welcome')}</h1>
           <p className="text-sm text-emerald-100 mt-1 font-medium">{t('app.welcomeSub')}</p>
         </div>
         <div className="flex items-center gap-3">
-          {/* العلم الجزائري التنسيقي البارز */}
           <div className="flex items-center rounded-xl overflow-hidden shadow-lg border-2 border-white/30 h-10 w-20" title="الجمهورية الجزائرية الديمقراطية الشعبية">
             <div className="w-1/2 bg-emerald-600 h-full"></div>
             <div className="w-1/2 bg-white h-full relative flex items-center justify-center">
@@ -635,44 +633,75 @@ function SettingsView({ data, onImport, onReset }: { data: AppData; onImport: (d
 
   return (
     <div className="space-y-6 max-w-4xl animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-extrabold text-neutral-900">{t('settings.title')}</h1>
-        <p className="text-sm text-neutral-500 mt-1">{t('settings.sub')}</p>
+      {/* شريط عنوان صفحة الإعدادات الفاخر المستوحى من العلم الوطني الجزائري */}
+      <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-900 border-2 border-emerald-600 rounded-2xl p-5 shadow-md flex flex-wrap items-center justify-between gap-4 text-white">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight">{t('settings.title')}</h1>
+          <p className="text-sm text-emerald-100 mt-1 font-medium">{t('settings.sub')}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center rounded-xl overflow-hidden shadow-lg border-2 border-white/30 h-10 w-20" title="الجمهورية الجزائرية الديمقراطية الشعبية">
+            <div className="w-1/2 bg-emerald-600 h-full"></div>
+            <div className="w-1/2 bg-white h-full relative flex items-center justify-center">
+              <div className="w-4 h-4 rounded-full border-2 border-red-600 flex items-center justify-center relative">
+                <span className="text-[8px] text-red-600 absolute">★</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {message && <div className="p-4 rounded-xl bg-primary-50 text-primary-700 text-sm font-medium flex items-center justify-between border border-primary-100"><span>{message}</span><button onClick={() => setMessage('')}><X size={16} /></button></div>}
 
-      <div className="card p-6 space-y-5 card-hover border border-neutral-100">
-        <h2 className="text-base font-bold text-neutral-900 flex items-center gap-2"><Globe className="text-primary-600" size={18} />{t('settings.language')}</h2>
-        <div className="flex gap-3">
-          <button type="button" className={cls('btn flex-1 py-3 justify-center text-sm shadow-2xs', locale === 'ar' ? 'btn-primary' : 'btn-secondary')} onClick={() => setLocale('ar')}>العربية (Arabic)</button>
-          <button type="button" className={cls('btn flex-1 py-3 justify-center text-sm shadow-2xs', locale === 'fr' ? 'btn-primary' : 'btn-secondary')} onClick={() => setLocale('fr')}>Français</button>
+      {/* قسم اللغة بأيقونات بارزة وألوان العلم الجزائري */}
+      <div className="card p-6 space-y-5 border-2 border-emerald-300 bg-emerald-50/40 card-hover shadow-2xs rounded-2xl">
+        <h2 className="text-base font-extrabold text-emerald-950 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-200 text-emerald-900 border-2 border-emerald-400 flex items-center justify-center shadow-2xs">
+            <Globe size={20} />
+          </div>
+          <span>{t('settings.language')}</span>
+        </h2>
+        <div className="flex gap-4">
+          <button type="button" className={cls('btn flex-1 py-3.5 justify-center text-sm font-bold rounded-xl shadow-2xs border-2 transition-all', locale === 'ar' ? 'bg-emerald-700 text-white border-emerald-800 shadow-md' : 'bg-white text-emerald-900 border-emerald-300 hover:bg-emerald-100')} onClick={() => setLocale('ar')}>العربية (Arabic)</button>
+          <button type="button" className={cls('btn flex-1 py-3.5 justify-center text-sm font-bold rounded-xl shadow-2xs border-2 transition-all', locale === 'fr' ? 'bg-emerald-700 text-white border-emerald-800 shadow-md' : 'bg-white text-emerald-900 border-emerald-300 hover:bg-emerald-100')} onClick={() => setLocale('fr')}>Français</button>
         </div>
       </div>
 
-      <div className="card p-6 space-y-5 card-hover border border-neutral-100">
-        <h2 className="text-base font-bold text-neutral-900 flex items-center gap-2"><ShieldCheck className="text-success-600" size={18} />{t('settings.data')}</h2>
+      {/* قسم إدارة البيانات والنسخ الاحتياطي بأيقونات بارزة وتصميم منسق */}
+      <div className="card p-6 space-y-5 border-2 border-sky-300 bg-sky-50/40 card-hover shadow-2xs rounded-2xl">
+        <h2 className="text-base font-extrabold text-sky-950 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-sky-200 text-sky-900 border-2 border-sky-400 flex items-center justify-center shadow-2xs">
+            <ShieldCheck size={20} />
+          </div>
+          <span>{t('settings.data')}</span>
+        </h2>
         <div className="grid sm:grid-cols-2 gap-4">
-          <button type="button" className="btn btn-secondary py-3 justify-center shadow-2xs" onClick={exportJson}><Download size={17} />{t('settings.exportJson')}</button>
-          <button type="button" className="btn btn-secondary py-3 justify-center shadow-2xs" onClick={exportCsvFile}><FileSpreadsheet size={17} />{t('settings.exportCsv')}</button>
+          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all"><Download size={18} className="text-sky-700" />{t('settings.exportJson')}</button>
+          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all"><FileSpreadsheet size={18} className="text-sky-700" />{t('settings.exportCsv')}</button>
         </div>
-        <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-neutral-100">
-          <label className="btn btn-secondary py-3 justify-center cursor-pointer shadow-2xs"><Upload size={17} />{t('settings.importJson')}<input type="file" accept=".json" className="hidden" onChange={(e) => importFile(e, true)} /></label>
-          <label className="btn btn-secondary py-3 justify-center cursor-pointer shadow-2xs"><FileJson size={17} />{t('settings.importCsv')}<input type="file" accept=".csv" className="hidden" onChange={(e) => importFile(e, false)} /></label>
+        <div className="grid sm:grid-cols-2 gap-4 pt-3 border-t-2 border-sky-200">
+          <label className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center cursor-pointer font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all"><Upload size={18} className="text-sky-700" />{t('settings.importJson')}<input type="file" accept=".json" className="hidden" onChange={(e) => importFile(e, true)} /></label>
+          <label className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center cursor-pointer font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all"><FileJson size={18} className="text-sky-700" />{t('settings.importCsv')}<input type="file" accept=".csv" className="hidden" onChange={(e) => importFile(e, false)} /></label>
         </div>
       </div>
 
       {canInstall && !installed && (
-        <div className="card p-6 bg-gradient-to-br from-primary-500 to-primary-700 text-white flex flex-wrap items-center justify-between gap-4 card-hover shadow-md border border-primary-400">
-          <div><h2 className="text-lg font-bold">{t('settings.pwaTitle')}</h2><p className="text-primary-100 text-sm mt-1">{t('settings.pwaSub')}</p></div>
-          <button type="button" onClick={promptInstall} className="bg-white text-primary-700 hover:bg-primary-50 font-semibold px-5 py-2.5 rounded-xl text-sm shadow-sm transition-colors flex items-center gap-2"><MonitorSmartphone size={17} />{t('settings.install')}</button>
+        <div className="card p-6 bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 text-white flex flex-wrap items-center justify-between gap-4 card-hover shadow-md border-2 border-emerald-500 rounded-2xl">
+          <div><h2 className="text-lg font-bold">{t('settings.pwaTitle')}</h2><p className="text-emerald-100 text-sm mt-1">{t('settings.pwaSub')}</p></div>
+          <button type="button" onClick={promptInstall} className="bg-white text-emerald-900 hover:bg-emerald-50 font-bold px-5 py-3 rounded-xl text-sm shadow-sm transition-colors flex items-center gap-2 border border-emerald-300"><MonitorSmartphone size={18} />{t('settings.install')}</button>
         </div>
       )}
 
-      <div className="card p-6 border-error-100 space-y-4 card-hover border border-error-100 bg-error-50/10">
-        <h2 className="text-base font-bold text-error-700 flex items-center gap-2"><Trash2 size={18} />{t('settings.dangerZone')}</h2>
-        <p className="text-sm text-neutral-500">{t('settings.resetSub')}</p>
-        <button type="button" className="btn btn-danger btn-md shadow-2xs" onClick={() => { if (window.confirm(t('settings.confirmReset'))) onReset(); }}><Trash2 size={17} />{t('settings.reset')}</button>
+      {/* منطقة الخطر بأيقونات بارزة وتصميم أحمر تحذيري متناسق */}
+      <div className="card p-6 border-2 border-red-300 space-y-4 card-hover shadow-2xs bg-red-50/50 rounded-2xl">
+        <h2 className="text-base font-extrabold text-red-950 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-red-200 text-red-900 border-2 border-red-400 flex items-center justify-center shadow-2xs">
+            <Trash2 size={20} />
+          </div>
+          <span>{t('settings.dangerZone')}</span>
+        </h2>
+        <p className="text-sm text-neutral-600 font-medium">{t('settings.resetSub')}</p>
+        <button type="button" className="btn bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 px-5 rounded-xl shadow-2xs border border-red-500 flex items-center gap-2 transition-all" onClick={() => { if (window.confirm(t('settings.confirmReset'))) onReset(); }}><Trash2 size={18} />{t('settings.reset')}</button>
       </div>
     </div>
   );
@@ -743,7 +772,6 @@ export default function App() {
           </nav>
         </div>
 
-        {/* تعديل قسم الحفظ التلقائي بأيقونات بارزة مستوحاة من ألوان العلم الوطني الجزائري */}
         <div className="pt-6 border-t border-neutral-800 mt-6 space-y-3">
           <div className="p-3.5 rounded-xl bg-neutral-800/80 border-2 border-emerald-600/60 shadow-inner flex items-center justify-between text-xs">
             <div className="flex items-center gap-2.5">
