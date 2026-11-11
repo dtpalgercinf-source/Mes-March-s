@@ -14,6 +14,7 @@ import {
   FileSpreadsheet,
   Filter,
   Globe,
+  KeyRound,
   LayoutDashboard,
   List,
   Lock,
@@ -43,11 +44,7 @@ import { cls, formatCurrency, formatCurrencyShort, formatDate, formatDateShort, 
 import { useAppData } from '@/lib/storage';
 
 type View = 'dashboard' | 'projects' | 'deadlines' | 'settings';
-type Modal = { kind: 'project' | 'invoice' | 'detail'; projectId?: string } | null;
-
-// بيانات الحماية الافتراضية
-const DEFAULT_USERNAME = 'admin';
-const DEFAULT_PASSWORD = '1234';
+type Modal = { kind: 'project' | 'invoice' | 'detail' | 'credentials'; projectId?: string } | null;
 
 function stageLabel(id: StageId, locale: Locale): string {
   const meta = stageMeta(id);
@@ -87,7 +84,96 @@ function ModalShell({ title, onClose, children, wide = false }: { title: string;
   return <div className="fixed inset-0 z-50 flex items-center justify-center p-4"><button aria-label="close" onClick={onClose} className="absolute inset-0 bg-neutral-950/40 backdrop-blur-sm transition-all" /><div className={cls('relative bg-white rounded-2xl shadow-elevated w-full max-h-[92vh] overflow-y-auto animate-scale-in border border-neutral-100', wide ? 'max-w-4xl' : 'max-w-2xl')}><div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-neutral-100 px-6 py-4 flex items-center justify-between"><h2 className="font-bold text-neutral-900 text-lg">{title}</h2><IconButton label="close" onClick={onClose}><X size={19} /></IconButton></div>{children}</div></div>;
 }
 
-// شاشة تسجيل الدخول وحماية البيانات الحساسة
+// نافذة تعديل اسم المستخدم وكلمة السر
+function CredentialsModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (msg: string) => void }) {
+  const currentUsername = localStorage.getItem('app_username') || 'admin';
+  const [username, setUsername] = useState(currentUsername);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSave = (e: FormEvent) => {
+    e.preventDefault();
+    if (!username.trim()) {
+      setError('اسم المستخدم لا يمكن أن يكون فارغاً');
+      return;
+    }
+    if (password && password !== confirmPassword) {
+      setError('كلمة المرور وتأكيدها غير متطابقين');
+      return;
+    }
+
+    localStorage.setItem('app_username', username.trim());
+    if (password) {
+      localStorage.setItem('app_password', password);
+    }
+    onSuccess('تم تحديث بيانات الدخول بنجاح!');
+    onClose();
+  };
+
+  return (
+    <ModalShell title="تغيير اسم المستخدم والرقم السري" onClose={onClose}>
+      <form onSubmit={handleSave} className="p-6 space-y-5">
+        {error && (
+          <div className="p-3.5 bg-red-50 border-2 border-red-200 text-red-700 text-xs font-bold rounded-xl flex items-center gap-2">
+            <AlertCircle size={17} className="shrink-0 text-red-600" />
+            <span>{error}</span>
+          </div>
+        )}
+        <label className="block space-y-1.5">
+          <span className="text-xs font-bold text-neutral-700 flex items-center gap-1.5">
+            <User size={15} className="text-emerald-700" />
+            اسم المستخدم الجديد
+          </span>
+          <input
+            type="text"
+            required
+            className="w-full px-4 py-3 rounded-xl border-2 border-neutral-300 focus:border-emerald-600 focus:outline-none text-sm font-semibold transition-all bg-neutral-50 focus:bg-white"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+        </label>
+        <label className="block space-y-1.5">
+          <span className="text-xs font-bold text-neutral-700 flex items-center gap-1.5">
+            <KeyRound size={15} className="text-emerald-700" />
+            الرقم السري الجديد (اختياري)
+          </span>
+          <input
+            type="password"
+            className="w-full px-4 py-3 rounded-xl border-2 border-neutral-300 focus:border-emerald-600 focus:outline-none text-sm font-semibold transition-all bg-neutral-50 focus:bg-white"
+            placeholder="اتركه فارغاً إن لمغن ترغب بتغييره"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+        {password && (
+          <label className="block space-y-1.5">
+            <span className="text-xs font-bold text-neutral-700 flex items-center gap-1.5">
+              <KeyRound size={15} className="text-emerald-700" />
+              تأكيد الرقم السري الجديد
+            </span>
+            <input
+              type="password"
+              required
+              className="w-full px-4 py-3 rounded-xl border-2 border-neutral-300 focus:border-emerald-600 focus:outline-none text-sm font-semibold transition-all bg-neutral-50 focus:bg-white"
+              placeholder="أعد إدخال الرقم السري الجديد"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </label>
+        )}
+        <div className="flex items-center justify-start gap-3 border-t border-neutral-100 pt-5">
+          <button type="submit" className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-md transition-all">
+            <Check size={18} />
+            <span>حفظ التغييرات</span>
+          </button>
+          <button type="button" className="btn-secondary btn-md shadow-2xs" onClick={onClose}>إلغاء</button>
+        </div>
+      </form>
+    </ModalShell>
+  );
+}
+
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -95,7 +181,10 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (username.trim() === DEFAULT_USERNAME && password === DEFAULT_PASSWORD) {
+    const savedUser = localStorage.getItem('app_username') || 'admin';
+    const savedPass = localStorage.getItem('app_password') || '1234';
+
+    if (username.trim() === savedUser && password === savedPass) {
       localStorage.setItem('app_authenticated', 'true');
       onLogin();
     } else {
@@ -107,7 +196,6 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
     <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-neutral-900 to-emerald-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border-2 border-emerald-600/30 overflow-hidden p-8 animate-scale-in">
         <div className="flex flex-col items-center text-center mb-8">
-          {/* العلم الوطني الجزائري الجمالي */}
           <div className="flex items-center rounded-2xl overflow-hidden shadow-md border-2 border-neutral-200 h-12 w-24 mb-4" title="الجمهورية الجزائرية الديمقراطية الشعبية">
             <div className="w-1/2 bg-emerald-600 h-full"></div>
             <div className="w-1/2 bg-white h-full relative flex items-center justify-center">
@@ -168,7 +256,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
         </form>
 
         <div className="mt-8 pt-4 border-t border-neutral-100 text-center">
-          <p className="text-[11px] text-neutral-400 font-medium">بيانات الدخول الافتراضية: admin / 1234</p>
+          <p className="text-[11px] text-neutral-400 font-medium">البيانات الافتراضية الأولى: admin / 1234</p>
         </div>
       </div>
     </div>
@@ -695,7 +783,7 @@ function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: 
   );
 }
 
-function SettingsView({ data, onImport, onReset, onLogout }: { data: AppData; onImport: (data: AppData) => void; onReset: () => void; onLogout: () => void }) {
+function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }: { data: AppData; onImport: (data: AppData) => void; onReset: () => void; onLogout: () => void; onChangeCredentials: () => void }) {
   const { t, locale, setLocale } = useI18n();
   const { canInstall, installed, promptInstall } = usePwaInstall();
   const [message, setMessage] = useState('');
@@ -745,6 +833,26 @@ function SettingsView({ data, onImport, onReset, onLogout }: { data: AppData; on
       </div>
 
       {message && <div className="p-4 rounded-xl bg-primary-50 text-primary-700 text-sm font-medium flex items-center justify-between border border-primary-100"><span>{message}</span><button onClick={() => setMessage('')}><X size={16} /></button></div>}
+
+      {/* قسم أمان الحساب وتغيير كلمة السر واسم المستخدم */}
+      <div className="card p-6 space-y-5 border-2 border-emerald-300 bg-emerald-50/40 card-hover shadow-2xs rounded-2xl">
+        <h2 className="text-base font-extrabold text-emerald-950 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-200 text-emerald-900 border-2 border-emerald-400 flex items-center justify-center shadow-2xs">
+              <KeyRound size={20} />
+            </div>
+            <span>أمان الحساب وتغيير بيانات الدخول</span>
+          </div>
+          <button
+            onClick={onChangeCredentials}
+            className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-sm transition-all border border-emerald-600 flex items-center gap-1.5"
+          >
+            <Pencil size={14} />
+            <span>تعديل الحساب</span>
+          </button>
+        </h2>
+        <p className="text-xs text-neutral-600 font-medium">قم بتحديث اسم المستخدم أو الرقم السري الخاص بك لحماية البيانات الحساسة من أي وصول غير مرغوب فيه.</p>
+      </div>
 
       <div className="card p-6 space-y-5 border-2 border-emerald-300 bg-emerald-50/40 card-hover shadow-2xs rounded-2xl">
         <h2 className="text-base font-extrabold text-emerald-950 flex items-center gap-3">
@@ -804,6 +912,7 @@ export default function App() {
   const [view, setView] = useState<View>('dashboard');
   const [modal, setModal] = useState<Modal>(null);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const authStatus = localStorage.getItem('app_authenticated');
@@ -852,13 +961,20 @@ export default function App() {
     updateData({ ...data, projects: data.projects.map((p) => (p.id === projectId ? { ...p, invoices: p.invoices.filter((i) => i.id !== invoiceId), updatedAt: new Date().toISOString() } : p)) });
   };
 
-  // حماية التطبيق: عرض شاشة تسجيل الدخول إذا لم يتم الدخول بعد
   if (!isAuthenticated) {
     return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
   }
 
   return (
     <div className={cls('min-h-screen bg-neutral-100 flex flex-col xl:flex-row text-neutral-800 font-sans', locale === 'ar' ? 'rtl' : 'ltr')} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+      {toastMessage && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-emerald-700 text-white px-6 py-3 rounded-2xl shadow-xl font-bold text-sm border border-emerald-500 animate-bounce flex items-center gap-2">
+          <CheckCircle2 size={18} />
+          <span>{toastMessage}</span>
+          <button onClick={() => setToastMessage(null)} className="mr-3 ml-1 text-emerald-200 hover:text-white"><X size={15} /></button>
+        </div>
+      )}
+
       <aside className="xl:w-72 bg-neutral-900 text-white p-6 flex flex-col justify-between shrink-0 shadow-lg">
         <div className="space-y-8">
           <div className="flex items-center gap-3">
@@ -911,7 +1027,7 @@ export default function App() {
         {view === 'dashboard' && <Dashboard projects={data.projects} onViewProject={(p) => setModal({ kind: 'detail', projectId: p.id })} onAdd={() => setModal({ kind: 'project' })} />}
         {view === 'projects' && <ProjectsView projects={data.projects} onView={(p) => setModal({ kind: 'detail', projectId: p.id })} onEdit={(p) => setModal({ kind: 'project', projectId: p.id })} onAdd={() => setModal({ kind: 'project' })} />}
         {view === 'deadlines' && <DeadlinesView projects={data.projects} onView={(p) => setModal({ kind: 'detail', projectId: p.id })} />}
-        {view === 'settings' && <SettingsView data={data} onImport={(d) => updateData(d)} onReset={resetData} onLogout={handleLogout} />}
+        {view === 'settings' && <SettingsView data={data} onImport={(d) => updateData(d)} onReset={resetData} onLogout={handleLogout} onChangeCredentials={() => setModal({ kind: 'credentials' })} />}
       </main>
 
       {modal?.kind === 'project' && (
@@ -922,6 +1038,10 @@ export default function App() {
 
       {modal?.kind === 'detail' && currentProject && (
         <ProjectDetail project={currentProject} onClose={() => setModal(null)} onEdit={() => setModal({ kind: 'project', projectId: currentProject.id })} onDelete={() => deleteProject(currentProject.id)} onAddInvoice={() => setActiveProject(currentProject)} onUpdateInvoice={(invId, patch) => updateInvoice(currentProject.id, invId, patch)} onDeleteInvoice={(invId) => deleteInvoice(currentProject.id, invId)} />
+      )}
+
+      {modal?.kind === 'credentials' && (
+        <CredentialsModal onClose={() => setModal(null)} onSuccess={(msg) => setToastMessage(msg)} />
       )}
 
       {activeProject && (
