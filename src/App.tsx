@@ -1094,15 +1094,16 @@ export default function App() {
         </div>
       )}
 
+      {/* الشريط الجانبي مع دمج الشعار الرسمي الجديد DZ Suivi */}
       <aside className="xl:w-72 bg-neutral-900 text-white p-6 flex flex-col justify-between shrink-0 shadow-lg">
         <div className="space-y-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white shadow-md">
-              <BriefcaseBusiness size={21} />
+            <div className="w-12 h-12 rounded-2xl bg-white p-1 flex items-center justify-center shadow-md border-2 border-emerald-500 overflow-hidden shrink-0">
+              <img src="/logo.png" alt="DZ Suivi Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h1 className="font-extrabold text-base tracking-tight">{t('app.title')}</h1>
-              <p className="text-xs text-neutral-400">{t('app.subtitle')}</p>
+              <p className="text-xs text-emerald-400 font-semibold">DZ Suivi</p>
             </div>
           </div>
           <nav className="space-y-1">
