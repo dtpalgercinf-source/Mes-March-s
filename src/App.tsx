@@ -40,8 +40,7 @@ import { INVOICE_STATUSES, STAGES, invoiceStatusMeta, stageMeta } from '@/types'
 import { useI18n, type Locale } from '@/lib/i18n';
 import { usePwaInstall } from '@/lib/usePwaInstall';
 import { cls, formatCurrency, formatCurrencyShort, formatDate, formatDateShort, relativeDeadline } from '@/lib/format';
-import { useAppData } from '@/lib/storage';
-import { setEncryptionKey } from '@/lib/db';
+import { setEncryptionKey, encryptData, decryptData } from '@/lib/db';
 
 // مكتبة استيراد وتصدير Excel
 import * as XLSX from 'xlsx';
@@ -189,7 +188,6 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 
     if (username.trim() === savedUser && password === savedPass) {
       localStorage.setItem('app_authenticated', 'true');
-      // ربط كلمة المرور بمفتاح التشفير عند نجاح تسجيل الدخول
       setEncryptionKey(password);
       onLogin();
     } else {
@@ -793,7 +791,6 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
   const { canInstall, installed, promptInstall } = usePwaInstall();
   const [message, setMessage] = useState('');
 
-  // تصدير ملفات Excel (.xlsx)
   const exportExcel = () => {
     try {
       const projectsFlat = data.projects.map((p) => ({
@@ -817,7 +814,6 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
     }
   };
 
-  // تصدير تقرير PDF يدعم اللغة العربية عبر الطباعة المباشرة من المتصفح
   const exportPdf = () => {
     try {
       const printWindow = window.open('', '_blank');
@@ -884,7 +880,6 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
     }
   };
 
-  // استيراد ملفات Excel (.xlsx)
   const importExcelFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1079,7 +1074,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
 }
 
 export default function App() {
-  const { data, updateData, resetData } = useAppData();
+  const [data, setData] = useState<AppData>({ projects: [] });
   const { t, locale } = useI18n();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [view, setView] = useState<View>('dashboard');
@@ -1089,13 +1084,20 @@ export default function App() {
   
   const [customLogo, setCustomLogo] = useState<string>(() => localStorage.getItem('app_custom_logo') || '');
 
+  // جراءة البيانات المشفرة عند تسجيل الدخول
   useEffect(() => {
     const authStatus = localStorage.getItem('app_authenticated');
     if (authStatus === 'true') {
       setIsAuthenticated(true);
-      // تهيئة مفتاح التشفير من كلمة المرور المحفوظة عند إعادة تحميل الصفحة
       const savedPass = localStorage.getItem('app_password') || '1234';
       setEncryptionKey(savedPass);
+
+      // قراءة البيانات وفك تشفيرها
+      const encryptedData = localStorage.getItem('secure_procurement_data');
+      if (encryptedData) {
+        const decrypted = decryptData(encryptedData);
+        if (decrypted) setData(decrypted);
+      }
     }
 
     const handleLogoUpdate = () => {
@@ -1104,6 +1106,23 @@ export default function App() {
     window.addEventListener('logo_updated', handleLogoUpdate);
     return () => window.removeEventListener('logo_updated', handleLogoUpdate);
   }, []);
+
+  // دالة لحفظ وتشفير البيانات تلقائياً في التخزين الآمن
+  const updateData = (newData: AppData) => {
+    setData(newData);
+    try {
+      const encryptedString = encryptData(newData);
+      localStorage.setItem('secure_procurement_data', encryptedString);
+    } catch (e) {
+      console.error('خطأ في تشفير وحفظ البيانات:', e);
+    }
+  };
+
+  const resetData = () => {
+    const emptyData = { projects: [] };
+    setData(emptyData);
+    localStorage.removeItem('secure_procurement_data');
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('app_authenticated');
@@ -1146,7 +1165,16 @@ export default function App() {
   };
 
   if (!isAuthenticated) {
-    return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
+    return <LoginScreen onLogin={() => {
+      setIsAuthenticated(true);
+      const savedPass = localStorage.getItem('app_password') || '1234';
+      setEncryptionKey(savedPass);
+      const encryptedData = localStorage.getItem('secure_procurement_data');
+      if (encryptedData) {
+        const decrypted = decryptData(encryptedData);
+        if (decrypted) setData(decrypted);
+      }
+    }} />;
   }
 
   return (
@@ -1192,11 +1220,11 @@ export default function App() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border border-white"></span>
               </span>
-              <span className="font-bold text-emerald-300 tracking-wide">{t('app.autoSave') || 'حفظ تلقائي نشط'}</span>
+              <span className="font-bold text-emerald-300 tracking-wide">تشفير AES نشط</span>
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-red-600/30 border border-red-500/50 text-red-300 font-mono font-bold text-[10px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-              <span>LIVE</span>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-600/30 border border-emerald-500/50 text-emerald-300 font-mono font-bold text-[10px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>SECURE</span>
             </div>
           </div>
 
