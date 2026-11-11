@@ -10,8 +10,8 @@ import {
   ChevronLeft,
   CircleDollarSign,
   Download,
-  FileJson,
   FileSpreadsheet,
+  FileText,
   Filter,
   Globe,
   KeyRound,
@@ -39,9 +39,13 @@ import type { AppData, Invoice, InvoiceStatus, Project, StageId } from '@/types'
 import { INVOICE_STATUSES, STAGES, invoiceStatusMeta, stageMeta } from '@/types';
 import { useI18n, type Locale } from '@/lib/i18n';
 import { usePwaInstall } from '@/lib/usePwaInstall';
-import { exportCsv, importCsv } from '@/lib/csv';
 import { cls, formatCurrency, formatCurrencyShort, formatDate, formatDateShort, relativeDeadline } from '@/lib/format';
 import { useAppData } from '@/lib/storage';
+
+// 👉 مكتبات استيراد وتصدير Excel و PDF
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 type View = 'dashboard' | 'projects' | 'deadlines' | 'settings';
 type Modal = { kind: 'project' | 'invoice' | 'detail' | 'credentials'; projectId?: string } | null;
@@ -84,7 +88,6 @@ function ModalShell({ title, onClose, children, wide = false }: { title: string;
   return <div className="fixed inset-0 z-50 flex items-center justify-center p-4"><button aria-label="close" onClick={onClose} className="absolute inset-0 bg-neutral-950/40 backdrop-blur-sm transition-all" /><div className={cls('relative bg-white rounded-2xl shadow-elevated w-full max-h-[92vh] overflow-y-auto animate-scale-in border border-neutral-100', wide ? 'max-w-4xl' : 'max-w-2xl')}><div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-neutral-100 px-6 py-4 flex items-center justify-between"><h2 className="font-bold text-neutral-900 text-lg">{title}</h2><IconButton label="close" onClick={onClose}><X size={19} /></IconButton></div>{children}</div></div>;
 }
 
-// نافذة تعديل اسم المستخدم وكلمة السر
 function CredentialsModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (msg: string) => void }) {
   const currentUsername = localStorage.getItem('app_username') || 'admin';
   const [username, setUsername] = useState(currentUsername);
@@ -141,7 +144,7 @@ function CredentialsModal({ onClose, onSuccess }: { onClose: () => void; onSucce
           <input
             type="password"
             className="w-full px-4 py-3 rounded-xl border-2 border-neutral-300 focus:border-emerald-600 focus:outline-none text-sm font-semibold transition-all bg-neutral-50 focus:bg-white"
-            placeholder="اتركه فارغاً إن لمغن ترغب بتغييره"
+            placeholder="اتركه فارغاً إن لم ترغب بتغييره"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -282,7 +285,7 @@ function ProjectForm({ initial, onSave, onClose }: { initial?: Project; onSave: 
           <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs transition-all py-2.5 px-3.5" value={values.name} onChange={(e) => set('name', e.target.value)} placeholder={t('form.projectNamePh')} />
         </label>
         <label className="space-y-1.5 block">
-          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><FileJson size={15} className="text-neutral-500" />{t('form.reference')} {req}</span>
+          <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><FileText size={15} className="text-neutral-500" />{t('form.reference')} {req}</span>
           <input required className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.reference} onChange={(e) => set('reference', e.target.value)} placeholder={t('form.referencePh')} dir="ltr" />
         </label>
         <label className="space-y-1.5 block">
@@ -788,30 +791,99 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
   const { canInstall, installed, promptInstall } = usePwaInstall();
   const [message, setMessage] = useState('');
 
-  const download = (content: string, filename: string, type: string) => {
-    const blob = new Blob([content], { type }); const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+  // تصدير ملفات Excel (.xlsx)
+  const exportExcel = () => {
+    try {
+      const projectsFlat = data.projects.map((p) => ({
+        'اسم المشروع': p.name,
+        'المرجع': p.reference,
+        'العميل': p.client,
+        'المبلغ (دج)': p.amount,
+        'المرحلة': p.stage,
+        'المسؤول': p.manager,
+        'تاريخ التسليم': p.submissionDeadline,
+        'تاريخ البداية': p.startDate,
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(projectsFlat);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'الصفقات');
+      XLSX.writeFile(workbook, `mes-marches-export-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      setMessage('تم تصدير ملف Excel بنجاح!');
+    } catch {
+      setMessage('حدث خطأ أثناء تصدير ملف Excel.');
+    }
   };
 
-  const exportJson = () => download(JSON.stringify(data, null, 2), `mes-marches-backup-${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
-  const exportCsvFile = () => download(exportCsv(data.projects), `mes-marches-projects-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
+  // تصدير تقرير PDF
+  const exportPdf = () => {
+    try {
+      const doc = new jsPDF();
+      doc.setFont('helvetica', 'bold');
+      doc.text('Mes Marches - تقرير صفقات الورشات', 14, 20);
 
-  const importFile = (e: ChangeEvent<HTMLInputElement>, isJson: boolean) => {
-    const file = e.target.files?.[0]; if (!file) return;
+      const tableData = data.projects.map((p) => [
+        p.name,
+        p.reference,
+        p.client,
+        p.amount.toString(),
+        p.stage,
+        p.submissionDeadline || '-'
+      ]);
+
+      (doc as any).autoTable({
+        startY: 30,
+        head: [['المشروع', 'المرجع', 'العميل', 'المبلغ', 'المرحلة', 'الآجال']],
+        body: tableData,
+        styles: { font: 'helvetica', halign: 'right' }
+      });
+
+      doc.save(`mes-marches-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+      setMessage('تم تصدير ملف PDF بنجاح!');
+    } catch {
+      setMessage('حدث خطأ أثناء تصدير ملف PDF.');
+    }
+  };
+
+  // استيراد ملفات Excel (.xlsx)
+  const importExcelFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
     const reader = new FileReader();
     reader.onload = (evt) => {
       try {
-        const text = evt.target?.result as string;
-        if (isJson) {
-          const parsed = JSON.parse(text);
-          if (parsed && Array.isArray(parsed.projects)) { onImport(parsed); setMessage(t('settings.importSuccess')); }
+        const dataBuffer = new Uint8Array(evt.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(dataBuffer, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const jsonData = XLSX.utils.sheet_to_json<any>(worksheet);
+
+        const importedProjects: Project[] = jsonData.map((row, index) => ({
+          id: `imported_${Date.now()}_${index}`,
+          name: row['اسم المشروع'] || row['name'] || 'مشروع مستورد',
+          reference: row['المرجع'] || row['reference'] || `REF-${index}`,
+          client: row['العميل'] || row['client'] || 'غير محدد',
+          amount: Number(row['المبلغ (دج)'] || row['amount'] || 0),
+          stage: 'consultation' as StageId,
+          manager: row['المسؤول'] || row['manager'] || '',
+          submissionDeadline: row['تاريخ التسليم'] || row['submissionDeadline'] || '',
+          startDate: row['تاريخ البداية'] || row['startDate'] || '',
+          invoices: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }));
+
+        if (importedProjects.length) {
+          onImport({ ...data, projects: [...importedProjects, ...data.projects] });
+          setMessage('تم استيراد ملف Excel وإضافة الصفقات بنجاح!');
         } else {
-          const imported = importCsv(text);
-          if (imported.length) { onImport({ ...data, projects: [...imported, ...data.projects] }); setMessage(t('settings.importSuccess')); }
+          setMessage('الملف فارغ أو لا يحتوي على أعمدة متوافقة.');
         }
-      } catch { setMessage(t('settings.importError')); }
+      } catch {
+        setMessage('فشل قراءة ملف Excel، تأكد من صحة الصيغة.');
+      }
     };
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
   };
 
   return (
@@ -834,7 +906,6 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
 
       {message && <div className="p-4 rounded-xl bg-primary-50 text-primary-700 text-sm font-medium flex items-center justify-between border border-primary-100"><span>{message}</span><button onClick={() => setMessage('')}><X size={16} /></button></div>}
 
-      {/* قسم أمان الحساب وتغيير كلمة السر واسم المستخدم */}
       <div className="card p-6 space-y-5 border-2 border-emerald-300 bg-emerald-50/40 card-hover shadow-2xs rounded-2xl">
         <h2 className="text-base font-extrabold text-emerald-950 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -851,7 +922,28 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
             <span>تعديل الحساب</span>
           </button>
         </h2>
-        <p className="text-xs text-neutral-600 font-medium">قم بتحديث اسم المستخدم أو الرقم السري الخاص بك لحماية البيانات الحساسة من أي وصول غير مرغوب فيه.</p>
+        <p className="text-xs text-neutral-600 font-medium">قم بتحديث اسم المستخدم أو الرقم السري الخاص بك لحماية البيانات الحساسة.</p>
+      </div>
+
+      {/* قسم إدارة الملفات (PDF & Excel فقط) */}
+      <div className="card p-6 space-y-5 border-2 border-sky-300 bg-sky-50/40 card-hover shadow-2xs rounded-2xl">
+        <h2 className="text-base font-extrabold text-sky-950 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-sky-200 text-sky-900 border-2 border-sky-400 flex items-center justify-center shadow-2xs">
+            <FileSpreadsheet size={20} />
+          </div>
+          <span>إدارة وتصدير بيانات الصفقات (PDF / Excel)</span>
+        </h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportExcel}><FileSpreadsheet size={18} className="text-emerald-700" />تصدير إلى Excel (.xlsx)</button>
+          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportPdf}><FileText size={18} className="text-rose-700" />تصدير تقرير PDF</button>
+        </div>
+        <div className="pt-3 border-t-2 border-sky-200">
+          <label className="w-full btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center cursor-pointer font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all">
+            <Upload size={18} className="text-sky-700" />
+            استيراد البيانات من ملف Excel
+            <input type="file" accept=".xlsx, .xls" className="hidden" onChange={importExcelFile} />
+          </label>
+        </div>
       </div>
 
       <div className="card p-6 space-y-5 border-2 border-emerald-300 bg-emerald-50/40 card-hover shadow-2xs rounded-2xl">
@@ -864,23 +956,6 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         <div className="flex gap-4">
           <button type="button" className={cls('btn flex-1 py-3.5 justify-center text-sm font-bold rounded-xl shadow-2xs border-2 transition-all', locale === 'ar' ? 'bg-emerald-700 text-white border-emerald-800 shadow-md' : 'bg-white text-emerald-900 border-emerald-300 hover:bg-emerald-100')} onClick={() => setLocale('ar')}>العربية (Arabic)</button>
           <button type="button" className={cls('btn flex-1 py-3.5 justify-center text-sm font-bold rounded-xl shadow-2xs border-2 transition-all', locale === 'fr' ? 'bg-emerald-700 text-white border-emerald-800 shadow-md' : 'bg-white text-emerald-900 border-emerald-300 hover:bg-emerald-100')} onClick={() => setLocale('fr')}>Français</button>
-        </div>
-      </div>
-
-      <div className="card p-6 space-y-5 border-2 border-sky-300 bg-sky-50/40 card-hover shadow-2xs rounded-2xl">
-        <h2 className="text-base font-extrabold text-sky-950 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-200 text-sky-900 border-2 border-sky-400 flex items-center justify-center shadow-2xs">
-            <ShieldCheck size={20} />
-          </div>
-          <span>{t('settings.data')}</span>
-        </h2>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportJson}><Download size={18} className="text-sky-700" />{t('settings.exportJson')}</button>
-          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportCsvFile}><FileSpreadsheet size={18} className="text-sky-700" />{t('settings.exportCsv')}</button>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4 pt-3 border-t-2 border-sky-200">
-          <label className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center cursor-pointer font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all"><Upload size={18} className="text-sky-700" />{t('settings.importJson')}<input type="file" accept=".json" className="hidden" onChange={(e) => importFile(e, true)} /></label>
-          <label className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center cursor-pointer font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all"><FileJson size={18} className="text-sky-700" />{t('settings.importCsv')}<input type="file" accept=".csv" className="hidden" onChange={(e) => importFile(e, false)} /></label>
         </div>
       </div>
 
