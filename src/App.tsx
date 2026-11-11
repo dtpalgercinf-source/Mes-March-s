@@ -1,4 +1,4 @@
-import { useMemo, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
+import { useMemo, useState, useEffect, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import {
   AlertCircle,
   Bell,
@@ -16,6 +16,8 @@ import {
   Globe,
   LayoutDashboard,
   List,
+  Lock,
+  LogOut,
   MonitorSmartphone,
   MoreHorizontal,
   Pencil,
@@ -28,19 +30,24 @@ import {
   Trash2,
   TrendingUp,
   Upload,
+  User,
   WalletCards,
   X,
 } from 'lucide-react';
 import type { AppData, Invoice, InvoiceStatus, Project, StageId } from '@/types';
 import { INVOICE_STATUSES, STAGES, invoiceStatusMeta, stageMeta } from '@/types';
-import { useAppData } from '@/lib/storage';
 import { useI18n, type Locale } from '@/lib/i18n';
 import { usePwaInstall } from '@/lib/usePwaInstall';
 import { exportCsv, importCsv } from '@/lib/csv';
 import { cls, formatCurrency, formatCurrencyShort, formatDate, formatDateShort, relativeDeadline } from '@/lib/format';
+import { useAppData } from '@/lib/storage';
 
 type View = 'dashboard' | 'projects' | 'deadlines' | 'settings';
 type Modal = { kind: 'project' | 'invoice' | 'detail'; projectId?: string } | null;
+
+// بيانات الحماية الافتراضية
+const DEFAULT_USERNAME = 'admin';
+const DEFAULT_PASSWORD = '1234';
 
 function stageLabel(id: StageId, locale: Locale): string {
   const meta = stageMeta(id);
@@ -78,6 +85,94 @@ function StageBadge({ stage, locale }: { stage: StageId; locale: Locale }) {
 
 function ModalShell({ title, onClose, children, wide = false }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
   return <div className="fixed inset-0 z-50 flex items-center justify-center p-4"><button aria-label="close" onClick={onClose} className="absolute inset-0 bg-neutral-950/40 backdrop-blur-sm transition-all" /><div className={cls('relative bg-white rounded-2xl shadow-elevated w-full max-h-[92vh] overflow-y-auto animate-scale-in border border-neutral-100', wide ? 'max-w-4xl' : 'max-w-2xl')}><div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-neutral-100 px-6 py-4 flex items-center justify-between"><h2 className="font-bold text-neutral-900 text-lg">{title}</h2><IconButton label="close" onClick={onClose}><X size={19} /></IconButton></div>{children}</div></div>;
+}
+
+// شاشة تسجيل الدخول وحماية البيانات الحساسة
+function LoginScreen({ onLogin }: { onLogin: () => void }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (username.trim() === DEFAULT_USERNAME && password === DEFAULT_PASSWORD) {
+      localStorage.setItem('app_authenticated', 'true');
+      onLogin();
+    } else {
+      setError('اسم المستخدم أو الرقم السري غير صحيح!');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-neutral-900 to-emerald-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border-2 border-emerald-600/30 overflow-hidden p-8 animate-scale-in">
+        <div className="flex flex-col items-center text-center mb-8">
+          {/* العلم الوطني الجزائري الجمالي */}
+          <div className="flex items-center rounded-2xl overflow-hidden shadow-md border-2 border-neutral-200 h-12 w-24 mb-4" title="الجمهورية الجزائرية الديمقراطية الشعبية">
+            <div className="w-1/2 bg-emerald-600 h-full"></div>
+            <div className="w-1/2 bg-white h-full relative flex items-center justify-center">
+              <div className="w-5 h-5 rounded-full border-2 border-red-600 flex items-center justify-center relative">
+                <span className="text-[9px] text-red-600 absolute">★</span>
+              </div>
+            </div>
+          </div>
+          <h1 className="text-2xl font-black text-neutral-900">نظام إدارة صفقات الورشات</h1>
+          <p className="text-xs text-neutral-500 mt-1 font-medium">الرجاء إدخال اسم المستخدم والرقم السري للوصول للبيانات الحساسة</p>
+        </div>
+
+        {error && (
+          <div className="mb-6 p-3.5 bg-red-50 border-2 border-red-200 text-red-700 text-xs font-bold rounded-xl flex items-center gap-2">
+            <AlertCircle size={17} className="shrink-0 text-red-600" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <label className="block space-y-1.5">
+            <span className="text-xs font-bold text-neutral-700 flex items-center gap-1.5">
+              <User size={15} className="text-emerald-700" />
+              اسم المستخدم
+            </span>
+            <input
+              type="text"
+              required
+              className="w-full px-4 py-3 rounded-xl border-2 border-neutral-300 focus:border-emerald-600 focus:outline-none text-sm font-semibold transition-all bg-neutral-50 focus:bg-white"
+              placeholder="أدخل اسم المستخدم"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </label>
+
+          <label className="block space-y-1.5">
+            <span className="text-xs font-bold text-neutral-700 flex items-center gap-1.5">
+              <Lock size={15} className="text-emerald-700" />
+              الرقم السري (Password)
+            </span>
+            <input
+              type="password"
+              required
+              className="w-full px-4 py-3 rounded-xl border-2 border-neutral-300 focus:border-emerald-600 focus:outline-none text-sm font-semibold transition-all bg-neutral-50 focus:bg-white"
+              placeholder="أدخل الرقم السري"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+
+          <button
+            type="submit"
+            className="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm border border-emerald-600 mt-2"
+          >
+            <ShieldCheck size={18} />
+            <span>تسجيل الدخول الآمن</span>
+          </button>
+        </form>
+
+        <div className="mt-8 pt-4 border-t border-neutral-100 text-center">
+          <p className="text-[11px] text-neutral-400 font-medium">بيانات الدخول الافتراضية: admin / 1234</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function ProjectForm({ initial, onSave, onClose }: { initial?: Project; onSave: (values: Omit<Project, 'id' | 'invoices' | 'createdAt' | 'updatedAt'>) => void; onClose: () => void }) {
@@ -600,7 +695,7 @@ function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: 
   );
 }
 
-function SettingsView({ data, onImport, onReset }: { data: AppData; onImport: (data: AppData) => void; onReset: () => void }) {
+function SettingsView({ data, onImport, onReset, onLogout }: { data: AppData; onImport: (data: AppData) => void; onReset: () => void; onLogout: () => void }) {
   const { t, locale, setLocale } = useI18n();
   const { canInstall, installed, promptInstall } = usePwaInstall();
   const [message, setMessage] = useState('');
@@ -633,27 +728,24 @@ function SettingsView({ data, onImport, onReset }: { data: AppData; onImport: (d
 
   return (
     <div className="space-y-6 max-w-4xl animate-fade-in">
-      {/* شريط عنوان صفحة الإعدادات الفاخر المستوحى من العلم الوطني الجزائري */}
       <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-900 border-2 border-emerald-600 rounded-2xl p-5 shadow-md flex flex-wrap items-center justify-between gap-4 text-white">
         <div>
           <h1 className="text-2xl font-black tracking-tight">{t('settings.title')}</h1>
           <p className="text-sm text-emerald-100 mt-1 font-medium">{t('settings.sub')}</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center rounded-xl overflow-hidden shadow-lg border-2 border-white/30 h-10 w-20" title="الجمهورية الجزائرية الديمقراطية الشعبية">
-            <div className="w-1/2 bg-emerald-600 h-full"></div>
-            <div className="w-1/2 bg-white h-full relative flex items-center justify-center">
-              <div className="w-4 h-4 rounded-full border-2 border-red-600 flex items-center justify-center relative">
-                <span className="text-[8px] text-red-600 absolute">★</span>
-              </div>
-            </div>
-          </div>
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl border border-red-500 shadow-sm transition-all"
+          >
+            <LogOut size={15} />
+            <span>تسجيل الخروج</span>
+          </button>
         </div>
       </div>
 
       {message && <div className="p-4 rounded-xl bg-primary-50 text-primary-700 text-sm font-medium flex items-center justify-between border border-primary-100"><span>{message}</span><button onClick={() => setMessage('')}><X size={16} /></button></div>}
 
-      {/* قسم اللغة بأيقونات بارزة وألوان العلم الجزائري */}
       <div className="card p-6 space-y-5 border-2 border-emerald-300 bg-emerald-50/40 card-hover shadow-2xs rounded-2xl">
         <h2 className="text-base font-extrabold text-emerald-950 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-emerald-200 text-emerald-900 border-2 border-emerald-400 flex items-center justify-center shadow-2xs">
@@ -667,7 +759,6 @@ function SettingsView({ data, onImport, onReset }: { data: AppData; onImport: (d
         </div>
       </div>
 
-      {/* قسم إدارة البيانات والنسخ الاحتياطي بأيقونات بارزة وتصميم منسق */}
       <div className="card p-6 space-y-5 border-2 border-sky-300 bg-sky-50/40 card-hover shadow-2xs rounded-2xl">
         <h2 className="text-base font-extrabold text-sky-950 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-sky-200 text-sky-900 border-2 border-sky-400 flex items-center justify-center shadow-2xs">
@@ -676,8 +767,8 @@ function SettingsView({ data, onImport, onReset }: { data: AppData; onImport: (d
           <span>{t('settings.data')}</span>
         </h2>
         <div className="grid sm:grid-cols-2 gap-4">
-          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all"><Download size={18} className="text-sky-700" />{t('settings.exportJson')}</button>
-          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all"><FileSpreadsheet size={18} className="text-sky-700" />{t('settings.exportCsv')}</button>
+          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportJson}><Download size={18} className="text-sky-700" />{t('settings.exportJson')}</button>
+          <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportCsvFile}><FileSpreadsheet size={18} className="text-sky-700" />{t('settings.exportCsv')}</button>
         </div>
         <div className="grid sm:grid-cols-2 gap-4 pt-3 border-t-2 border-sky-200">
           <label className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center cursor-pointer font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all"><Upload size={18} className="text-sky-700" />{t('settings.importJson')}<input type="file" accept=".json" className="hidden" onChange={(e) => importFile(e, true)} /></label>
@@ -692,7 +783,6 @@ function SettingsView({ data, onImport, onReset }: { data: AppData; onImport: (d
         </div>
       )}
 
-      {/* منطقة الخطر بأيقونات بارزة وتصميم أحمر تحذيري متناسق */}
       <div className="card p-6 border-2 border-red-300 space-y-4 card-hover shadow-2xs bg-red-50/50 rounded-2xl">
         <h2 className="text-base font-extrabold text-red-950 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-red-200 text-red-900 border-2 border-red-400 flex items-center justify-center shadow-2xs">
@@ -710,9 +800,22 @@ function SettingsView({ data, onImport, onReset }: { data: AppData; onImport: (d
 export default function App() {
   const { data, updateData, resetData } = useAppData();
   const { t, locale } = useI18n();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [view, setView] = useState<View>('dashboard');
   const [modal, setModal] = useState<Modal>(null);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
+
+  useEffect(() => {
+    const authStatus = localStorage.getItem('app_authenticated');
+    if (authStatus === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('app_authenticated');
+    setIsAuthenticated(false);
+  };
 
   const currentProject = useMemo(() => {
     if (!modal || modal.kind !== 'detail' || !modal.projectId) return null;
@@ -748,6 +851,11 @@ export default function App() {
   const deleteInvoice = (projectId: string, invoiceId: string) => {
     updateData({ ...data, projects: data.projects.map((p) => (p.id === projectId ? { ...p, invoices: p.invoices.filter((i) => i.id !== invoiceId), updatedAt: new Date().toISOString() } : p)) });
   };
+
+  // حماية التطبيق: عرض شاشة تسجيل الدخول إذا لم يتم الدخول بعد
+  if (!isAuthenticated) {
+    return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <div className={cls('min-h-screen bg-neutral-100 flex flex-col xl:flex-row text-neutral-800 font-sans', locale === 'ar' ? 'rtl' : 'ltr')} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
@@ -787,11 +895,13 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[11px] text-neutral-400 font-medium">إعدادات النظام</span>
-            <button onClick={() => setView('settings')} title={t('nav.settings')} className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-emerald-400 hover:text-emerald-300 transition-colors border border-emerald-600/30 shadow-2xs flex items-center gap-1.5 text-xs font-semibold">
+          <div className="flex items-center justify-between gap-2">
+            <button onClick={() => setView('settings')} title={t('nav.settings')} className="flex-1 p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-emerald-400 hover:text-emerald-300 transition-colors border border-emerald-600/30 shadow-2xs flex items-center justify-center gap-1.5 text-xs font-semibold">
               <SettingsIcon size={15} />
               <span>الإعدادات</span>
+            </button>
+            <button onClick={handleLogout} title="تسجيل الخروج" className="p-2 rounded-xl bg-red-950/60 hover:bg-red-900 text-red-400 border border-red-800/60 transition-colors flex items-center justify-center">
+              <LogOut size={15} />
             </button>
           </div>
         </div>
@@ -801,7 +911,7 @@ export default function App() {
         {view === 'dashboard' && <Dashboard projects={data.projects} onViewProject={(p) => setModal({ kind: 'detail', projectId: p.id })} onAdd={() => setModal({ kind: 'project' })} />}
         {view === 'projects' && <ProjectsView projects={data.projects} onView={(p) => setModal({ kind: 'detail', projectId: p.id })} onEdit={(p) => setModal({ kind: 'project', projectId: p.id })} onAdd={() => setModal({ kind: 'project' })} />}
         {view === 'deadlines' && <DeadlinesView projects={data.projects} onView={(p) => setModal({ kind: 'detail', projectId: p.id })} />}
-        {view === 'settings' && <SettingsView data={data} onImport={(d) => updateData(d)} onReset={resetData} />}
+        {view === 'settings' && <SettingsView data={data} onImport={(d) => updateData(d)} onReset={resetData} onLogout={handleLogout} />}
       </main>
 
       {modal?.kind === 'project' && (
