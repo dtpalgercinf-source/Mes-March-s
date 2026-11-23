@@ -789,7 +789,7 @@ function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: 
 
 function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }: { data: AppData; onImport: (data: AppData) => void; onReset: () => void; onLogout: () => void; onChangeCredentials: () => void }) {
   const { t, locale, setLocale } = useI18n();
-  const { canInstall, isInstalled, promptInstall } = usePwaInstall();
+  const { canInstall, installed, promptInstall } = usePwaInstall();
   const [message, setMessage] = useState('');
 
   const exportExcel = () => {
@@ -1053,7 +1053,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         </div>
       </div>
 
-      {canInstall && !isInstalled && (
+      {canInstall && !installed && (
         <div className="card p-6 bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 text-white flex flex-wrap items-center justify-between gap-4 card-hover shadow-md border-2 border-emerald-500 rounded-2xl">
           <div><h2 className="text-lg font-bold">{t('settings.pwaTitle')}</h2><p className="text-emerald-100 text-sm mt-1">{t('settings.pwaSub')}</p></div>
           <button type="button" onClick={promptInstall} className="bg-white text-emerald-900 hover:bg-emerald-50 font-bold px-5 py-3 rounded-xl text-sm shadow-sm transition-colors flex items-center gap-2 border border-emerald-300"><MonitorSmartphone size={18} />{t('settings.install')}</button>
@@ -1075,14 +1075,23 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
 }
 
 function InstallAppButton() {
-  const { canInstall, isInstalled, promptInstall } = usePwaInstall();
+  const { canInstall, installed, promptInstall } = usePwaInstall();
 
-  if (isInstalled || !canInstall) return null;
+  // إخفاء الزر فقط إذا كان التطبيق مثبتاً ويعمل في وضع التطبيق المستقل
+  if (installed) return null;
+
+  const handleInstallClick = () => {
+    if (canInstall) {
+      promptInstall();
+    } else {
+      alert('لتثبيت التطبيق: اضغط على أيقونة التثبيت الموجودة في شريط العنوان بالأعلى (بجانب النجمة) ثم اختر "تثبيت / Install".');
+    }
+  };
 
   return (
     <button
       type="button"
-      onClick={promptInstall}
+      onClick={handleInstallClick}
       aria-label="تحميل وتثبيت التطبيق"
       title="تحميل وتثبيت التطبيق"
       className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm border border-emerald-500 transition-all"
