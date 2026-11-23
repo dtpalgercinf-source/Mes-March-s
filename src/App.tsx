@@ -41,7 +41,13 @@ import { INVOICE_STATUSES, STAGES, invoiceStatusMeta, stageMeta } from '@/types'
 import { useI18n, type Locale } from '@/lib/i18n';
 import { usePwaInstall } from '@/lib/usePwaInstall';
 import { cls, formatCurrency, formatCurrencyShort, formatDate, formatDateShort, relativeDeadline } from '@/lib/format';
-import { setEncryptionKey, encryptData, decryptData } from '@/lib/db';
+import {
+  setEncryptionKey,
+  clearEncryptionKey,
+  saveEncryptedAppData,
+  loadEncryptedAppData,
+  clearEncryptedAppData,
+} from '@/lib/db';
 
 // مكتبة استيراد وتصدير Excel
 import * as XLSX from 'xlsx';
@@ -66,35 +72,92 @@ const navKeys: { id: View; key: string; icon: typeof LayoutDashboard }[] = [
 ];
 
 function IconButton({ label, onClick, children, danger = false }: { label: string; onClick?: () => void; children: ReactNode; danger?: boolean }) {
-  return <button type="button" aria-label={label} title={label} onClick={onClick} className={cls('btn btn-icon', danger ? 'text-error-600 hover:bg-error-50' : 'text-neutral-500 hover:bg-neutral-100')}>{children}</button>;
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className={cls('btn btn-icon', danger ? 'text-error-600 hover:bg-error-50' : 'text-neutral-500 hover:bg-neutral-100')}
+    >
+      {children}
+    </button>
+  );
 }
 
 function SectionTitle({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
-  return <div className="flex flex-wrap items-start justify-between gap-4 mb-5"><div><h2 className="text-lg font-bold text-neutral-900">{title}</h2>{subtitle && <p className="text-sm text-neutral-500 mt-1">{subtitle}</p>}</div>{action}</div>;
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
+      <div>
+        <h2 className="text-lg font-bold text-neutral-900">{title}</h2>
+        {subtitle && <p className="text-sm text-neutral-500 mt-1">{subtitle}</p>}
+      </div>
+      {action}
+    </div>
+  );
 }
 
 function StatCard({ icon: Icon, label, value, caption, color }: { icon: typeof BriefcaseBusiness; label: string; value: string; caption: string; color: 'blue' | 'green' | 'amber' | 'sky' }) {
   const styles = { blue: 'bg-primary-50 text-primary-600', green: 'bg-success-50 text-success-600', amber: 'bg-warning-50 text-warning-600', sky: 'bg-sky-50 text-sky-600' };
-  return <div className="card p-5 relative overflow-hidden card-hover border border-neutral-100"><div className="flex items-start justify-between"><div><p className="text-sm text-neutral-500">{label}</p><p className="text-2xl font-extrabold text-neutral-900 mt-2 tracking-tight">{value}</p><p className="text-xs text-neutral-400 mt-2">{caption}</p></div><div className={cls('w-11 h-11 rounded-xl flex items-center justify-center shadow-sm', styles[color])}><Icon size={21} /></div></div><div className={cls('absolute -bottom-7 -left-5 w-20 h-20 rounded-full opacity-30', color === 'green' ? 'bg-success-100' : color === 'amber' ? 'bg-warning-100' : color === 'sky' ? 'bg-sky-100' : 'bg-primary-100')} /></div>;
+  return (
+    <div className="card p-5 relative overflow-hidden card-hover border border-neutral-100">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-neutral-500">{label}</p>
+          <p className="text-2xl font-extrabold text-neutral-900 mt-2 tracking-tight">{value}</p>
+          <p className="text-xs text-neutral-400 mt-2">{caption}</p>
+        </div>
+        <div className={cls('w-11 h-11 rounded-xl flex items-center justify-center shadow-sm', styles[color])}>
+          <Icon size={21} />
+        </div>
+      </div>
+      <div className={cls('absolute -bottom-7 -left-5 w-20 h-20 rounded-full opacity-30', color === 'green' ? 'bg-success-100' : color === 'amber' ? 'bg-warning-100' : color === 'sky' ? 'bg-sky-100' : 'bg-primary-100')} />
+    </div>
+  );
 }
 
 function StageBadge({ stage, locale }: { stage: StageId; locale: Locale }) {
   const meta = stageMeta(stage);
-  return <span className={cls('badge border', meta.badge)}><span className={cls('w-1.5 h-1.5 rounded-full', meta.dot)} />{stageLabel(stage, locale)}</span>;
+  return (
+    <span className={cls('badge border', meta.badge)}>
+      <span className={cls('w-1.5 h-1.5 rounded-full', meta.dot)} />
+      {stageLabel(stage, locale)}
+    </span>
+  );
 }
 
 function ModalShell({ title, onClose, children, wide = false }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
-  return <div className="fixed inset-0 z-50 flex items-center justify-center p-4"><button aria-label="close" onClick={onClose} className="absolute inset-0 bg-neutral-950/40 backdrop-blur-sm transition-all" /><div className={cls('relative bg-white rounded-2xl shadow-elevated w-full max-h-[92vh] overflow-y-auto animate-scale-in border border-neutral-100', wide ? 'max-w-4xl' : 'max-w-2xl')}><div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-neutral-100 px-6 py-4 flex items-center justify-between"><h2 className="font-bold text-neutral-900 text-lg">{title}</h2><IconButton label="close" onClick={onClose}><X size={19} /></IconButton></div>{children}</div></div>;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button aria-label="close" onClick={onClose} className="absolute inset-0 bg-neutral-950/40 backdrop-blur-sm transition-all" />
+      <div className={cls('relative bg-white rounded-2xl shadow-elevated w-full max-h-[92vh] overflow-y-auto animate-scale-in border border-neutral-100', wide ? 'max-w-4xl' : 'max-w-2xl')}>
+        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-neutral-100 px-6 py-4 flex items-center justify-between">
+          <h2 className="font-bold text-neutral-900 text-lg">{title}</h2>
+          <IconButton label="close" onClick={onClose}><X size={19} /></IconButton>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
 }
 
-function CredentialsModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (msg: string) => void }) {
+function CredentialsModal({
+  currentData,
+  onClose,
+  onSuccess,
+}: {
+  currentData: AppData;
+  onClose: () => void;
+  onSuccess: (msg: string) => void;
+}) {
   const currentUsername = localStorage.getItem('app_username') || 'admin';
   const [username, setUsername] = useState(currentUsername);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = (e: FormEvent) => {
+  const handleSave = async (e: FormEvent) => {
     e.preventDefault();
     if (!username.trim()) {
       setError('اسم المستخدم لا يمكن أن يكون فارغاً');
@@ -105,13 +168,28 @@ function CredentialsModal({ onClose, onSuccess }: { onClose: () => void; onSucce
       return;
     }
 
-    localStorage.setItem('app_username', username.trim());
-    if (password) {
-      localStorage.setItem('app_password', password);
-      setEncryptionKey(password);
+    try {
+      setSaving(true);
+      localStorage.setItem('app_username', username.trim());
+
+      if (password) {
+        const updatedKey = setEncryptionKey(password, { registerOrUpdate: true });
+        if (!updatedKey) {
+          setError('تعذر تحديث مفتاح التشفير');
+          setSaving(false);
+          return;
+        }
+        // إعادة تشفير البيانات الحالية بالمفتاح الجديد في Dexie
+        await saveEncryptedAppData(currentData);
+      }
+
+      onSuccess('تم تحديث بيانات الدخول وحماية البيانات بنجاح!');
+      onClose();
+    } catch {
+      setError('حدث خطأ أثناء حفظ البيانات المشفرة');
+    } finally {
+      setSaving(false);
     }
-    onSuccess('تم تحديث بيانات الدخول بنجاح!');
-    onClose();
   };
 
   return (
@@ -166,9 +244,13 @@ function CredentialsModal({ onClose, onSuccess }: { onClose: () => void; onSucce
           </label>
         )}
         <div className="flex items-center justify-start gap-3 border-t border-neutral-100 pt-5">
-          <button type="submit" className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-md transition-all">
+          <button
+            type="submit"
+            disabled={saving}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white font-bold rounded-xl shadow-md transition-all"
+          >
             <Check size={18} />
-            <span>حفظ التغييرات</span>
+            <span>{saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}</span>
           </button>
           <button type="button" className="btn-secondary btn-md shadow-2xs" onClick={onClose}>إلغاء</button>
         </div>
@@ -185,11 +267,16 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const savedUser = localStorage.getItem('app_username') || 'admin';
-    const savedPass = localStorage.getItem('app_password') || '1234';
 
-    if (username.trim() === savedUser && password === savedPass) {
-      localStorage.setItem('app_authenticated', 'true');
-      setEncryptionKey(password);
+    if (username.trim() !== savedUser) {
+      setError('اسم المستخدم أو الرقم السري غير صحيح!');
+      return;
+    }
+
+    // التحقق من الرقم السري واشتقاق مفتاح التشفير في الذاكرة دون حفظ كلمة المرور الخام في localStorage
+    const isValidKey = setEncryptionKey(password);
+    if (isValidKey) {
+      sessionStorage.setItem('app_authenticated', 'true');
       onLogin();
     } else {
       setError('اسم المستخدم أو الرقم السري غير صحيح!');
@@ -1113,20 +1200,14 @@ export default function App() {
   
   const [customLogo, setCustomLogo] = useState<string>(() => localStorage.getItem('app_custom_logo') || '');
 
-  // تحميل البيانات المشفرة عند فتح التطبيق
+  // تحميل البيانات المشفرة من Dexie عند فتح التطبيق
   useEffect(() => {
-    const authStatus = localStorage.getItem('app_authenticated');
+    const authStatus = sessionStorage.getItem('app_authenticated');
     if (authStatus === 'true') {
       setIsAuthenticated(true);
-      const savedPass = localStorage.getItem('app_password') || '1234';
-      setEncryptionKey(savedPass);
-
-      // فك تشفير البيانات من التخزين
-      const encryptedData = localStorage.getItem('secure_procurement_data');
-      if (encryptedData) {
-        const decrypted = decryptData(encryptedData);
+      loadEncryptedAppData().then((decrypted) => {
         if (decrypted) setData(decrypted);
-      }
+      });
     }
 
     const handleLogoUpdate = () => {
@@ -1136,25 +1217,25 @@ export default function App() {
     return () => window.removeEventListener('logo_updated', handleLogoUpdate);
   }, []);
 
-  // حفظ حالة البيانات وتشفيرها وتخزينها في التخزين الآمن
-  const updateData = (newData: AppData) => {
+  // حفظ حالة البيانات وتشفيرها وتخزينها في Dexie
+  const updateData = async (newData: AppData) => {
     setData(newData);
     try {
-      const encryptedString = encryptData(newData);
-      localStorage.setItem('secure_procurement_data', encryptedString);
+      await saveEncryptedAppData(newData);
     } catch (e) {
       console.error('خطأ في تشفير وحفظ البيانات:', e);
     }
   };
 
-  const resetData = () => {
+  const resetData = async () => {
     const emptyData = { projects: [] };
     setData(emptyData);
-    localStorage.removeItem('secure_procurement_data');
+    await clearEncryptedAppData();
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('app_authenticated');
+    sessionStorage.removeItem('app_authenticated');
+    clearEncryptionKey();
     setIsAuthenticated(false);
   };
 
@@ -1194,16 +1275,15 @@ export default function App() {
   };
 
   if (!isAuthenticated) {
-    return <LoginScreen onLogin={() => {
-      setIsAuthenticated(true);
-      const savedPass = localStorage.getItem('app_password') || '1234';
-      setEncryptionKey(savedPass);
-      const encryptedData = localStorage.getItem('secure_procurement_data');
-      if (encryptedData) {
-        const decrypted = decryptData(encryptedData);
-        if (decrypted) setData(decrypted);
-      }
-    }} />;
+    return (
+      <LoginScreen
+        onLogin={async () => {
+          setIsAuthenticated(true);
+          const decrypted = await loadEncryptedAppData();
+          if (decrypted) setData(decrypted);
+        }}
+      />
+    );
   }
 
   return (
@@ -1289,7 +1369,7 @@ export default function App() {
       )}
 
       {modal?.kind === 'credentials' && (
-        <CredentialsModal onClose={() => setModal(null)} onSuccess={(msg) => setToastMessage(msg)} />
+        <CredentialsModal currentData={data} onClose={() => setModal(null)} onSuccess={(msg) => setToastMessage(msg)} />
       )}
 
       {activeProject && (
