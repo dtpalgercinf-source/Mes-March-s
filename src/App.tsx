@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   CircleDollarSign,
   FileSpreadsheet,
+  Download,
   FileText,
   Filter,
   Globe,
@@ -678,7 +679,7 @@ function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: 
         </div>
         <div className="flex items-center gap-2">
           <span className="px-3.5 py-1.5 bg-rose-100 text-rose-800 text-xs font-bold rounded-xl border-2 border-rose-300 shadow-2xs">
-            {urgentRemindersCount} {t('deadlines.upcoming30') || 'إنذارات عاجلة'}
+            {urgentRemindersCount} {t('deadlines.upcoming30') || 'مواعيد عاجلة'}
           </span>
         </div>
       </div>
@@ -788,7 +789,7 @@ function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: 
 
 function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }: { data: AppData; onImport: (data: AppData) => void; onReset: () => void; onLogout: () => void; onChangeCredentials: () => void }) {
   const { t, locale, setLocale } = useI18n();
-  const { canInstall, installed, promptInstall } = usePwaInstall();
+  const { canInstall, isInstalled, promptInstall } = usePwaInstall();
   const [message, setMessage] = useState('');
 
   const exportExcel = () => {
@@ -801,7 +802,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         [locale === 'fr' ? 'Étape' : 'المرحلة']: stageLabel(p.stage, locale),
         [locale === 'fr' ? 'Responsable' : 'المسؤول']: p.manager,
         [locale === 'fr' ? 'Date limite' : 'تاريخ التسليم']: p.submissionDeadline,
-        [locale === 'fr' ? 'Date de début' : 'تاريخ البداية']: p.startDate,
+        [locale === 'fr' ? 'Date de début' : 'تاريخ البدء']: p.startDate,
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(projectsFlat);
@@ -824,7 +825,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         <html lang="${locale}" dir="${locale === 'ar' ? 'rtl' : 'ltr'}">
         <head>
           <meta charset="UTF-8">
-          <title>${locale === 'fr' ? 'Rapport des Marchés' : 'تقرير صفقات الورشات'}</title>
+          <title>${locale === 'fr' ? 'Rapport des Marchés' : 'تقرير ملفات الصفقات'}</title>
           <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 25px; direction: ${locale === 'ar' ? 'rtl' : 'ltr'}; text-align: ${locale === 'ar' ? 'right' : 'left'}; color: #1f2937; }
             h1 { text-align: center; color: #047857; margin-bottom: 8px; font-size: 24px; }
@@ -836,7 +837,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
           </style>
         </head>
         <body>
-          <h1>${locale === 'fr' ? 'Rapport des Marchés et Chantiers' : 'تقرير صفقات الورشات والمشاريع'}</h1>
+          <h1>${locale === 'fr' ? 'Rapport des Marchés et Chantiers' : 'تقرير ملفات الصفقات والورشات'}</h1>
           <p class="subtitle">${locale === 'fr' ? 'Date du rapport :' : 'تاريخ التقرير :'} ${new Date().toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'ar-DZ')}</p>
           <table>
             <thead>
@@ -846,7 +847,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
                 <th>${locale === 'fr' ? 'Client' : 'العميل'}</th>
                 <th>${locale === 'fr' ? 'Montant (DZD)' : 'المبلغ (دج)'}</th>
                 <th>${locale === 'fr' ? 'Étape' : 'المرحلة'}</th>
-                <th>${locale === 'fr' ? 'Échéance' : 'آجال التسليم'}</th>
+                <th>${locale === 'fr' ? 'Échéance' : 'أجل التسليم'}</th>
               </tr>
             </thead>
             <tbody>
@@ -874,7 +875,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         printWindow.close();
       }, 300);
 
-      setMessage(locale === 'fr' ? 'Fenêtre d\'impression PDF ouverte avec succès !' : 'تم فتح نافذة حفظ التقرير كـ PDF بنجاح!');
+      setMessage(locale === 'fr' ? 'Fenêtre d\'impression PDF ouverte avec succès !' : 'تم فتح نافذة طباعة التقرير إلى PDF بنجاح!');
     } catch {
       setMessage(locale === 'fr' ? 'Erreur lors de l\'exportation du rapport.' : 'حدث خطأ أثناء تصدير التقرير.');
     }
@@ -896,12 +897,12 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
           id: `imported_${Date.now()}_${index}`,
           name: row['اسم المشروع'] || row['Nom du Projet'] || row['name'] || 'مشروع مستورد',
           reference: row['المرجع'] || row['Référence'] || row['reference'] || `REF-${index}`,
-          client: row['العميل'] || row['Client'] || row['client'] || 'غير محدد',
+          client: row['العميل'] || row['Client'] || row['client'] || 'عميل عام',
           amount: Number(row['المبلغ (دج)'] || row['Montant (DZD)'] || row['amount'] || 0),
           stage: 'consultation' as StageId,
           manager: row['المسؤول'] || row['Responsable'] || row['manager'] || '',
           submissionDeadline: row['تاريخ التسليم'] || row['Date limite'] || row['submissionDeadline'] || '',
-          startDate: row['تاريخ البداية'] || row['Date de début'] || row['startDate'] || '',
+          startDate: row['تاريخ البدء'] || row['Date de début'] || row['startDate'] || '',
           invoices: [],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
@@ -914,7 +915,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
           setMessage(locale === 'fr' ? 'Le fichier est vide ou ne contient pas de colonnes compatibles.' : 'الملف فارغ أو لا يحتوي على أعمدة متوافقة.');
         }
       } catch {
-        setMessage(locale === 'fr' ? 'Échec de la lecture du fichier Excel.' : 'فشل قراءة ملف Excel، تأكد من صحة الصيغة.');
+        setMessage(locale === 'fr' ? 'Échec de la lecture du fichier Excel.' : 'فشل قراءة ملف Excel. تأكد من صحة الملف.');
       }
     };
     reader.readAsArrayBuffer(file);
@@ -938,7 +939,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
   const removeCustomLogo = () => {
     localStorage.removeItem('app_custom_logo');
     window.dispatchEvent(new Event('logo_updated'));
-    setMessage(locale === 'fr' ? 'Logo réinitialisé par défaut.' : 'تمت إعادة الشعار للوضع الافتراضي.');
+    setMessage(locale === 'fr' ? 'Logo réinitialisé par défaut.' : 'تمت إعادة الشعار إلى الافتراضي.');
   };
 
   return (
@@ -966,17 +967,17 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
           <div className="w-10 h-10 rounded-xl bg-emerald-200 text-emerald-900 border-2 border-emerald-400 flex items-center justify-center shadow-2xs">
             <ImageIcon size={20} />
           </div>
-          <span>{locale === 'fr' ? 'Personnalisation du Logo de l\'application' : 'تخصيص ورفع شعار التطبيق'}</span>
+          <span>{locale === 'fr' ? 'Personnalisation du Logo de l\'application' : 'تخصيص صورة شعار التطبيق'}</span>
         </h2>
         <p className="text-xs text-neutral-600 font-medium">
           {locale === 'fr' 
             ? 'Téléchargez une image pour remplacer le logo affiché dans la barre latérale.' 
-            : 'قم برفع صورة أو شعار (مثل شعار DZ Suivi) ليظهر بشكل دائم في الشريط الجانبي للتطبيق.'}
+            : 'قم برفع صورة أو شعار (مثل شعار DZ Suivi) ليظهر مكان الشعار في القائمة الجانبية للتطبيق.'}
         </p>
         <div className="flex flex-wrap items-center gap-4 pt-2">
           <label className="btn bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-3 cursor-pointer font-bold rounded-xl shadow-sm flex items-center gap-2 transition-all">
             <Upload size={18} />
-            {locale === 'fr' ? 'Télécharger un nouveau logo' : 'رفع شعار جديد'}
+            {locale === 'fr' ? 'Télécharger un nouveau logo' : 'رفع صورة جديدة'}
             <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
           </label>
           <button 
@@ -985,7 +986,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
             className="px-4 py-3 bg-white hover:bg-red-50 text-red-600 border-2 border-red-300 font-bold rounded-xl shadow-2xs transition-all flex items-center gap-1.5 text-sm"
           >
             <Trash2 size={16} />
-            {locale === 'fr' ? 'Réinitialiser le logo' : 'إزالة الشعار المخصص'}
+            {locale === 'fr' ? 'Réinitialiser le logo' : 'إعادة الشعار الأصلي'}
           </button>
         </div>
       </div>
@@ -996,7 +997,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
             <div className="w-10 h-10 rounded-xl bg-emerald-200 text-emerald-900 border-2 border-emerald-400 flex items-center justify-center shadow-2xs">
               <KeyRound size={20} />
             </div>
-            <span>{locale === 'fr' ? 'Sécurité du compte et modification des identifiants' : 'أمان الحساب وتغيير بيانات الدخول'}</span>
+            <span>{locale === 'fr' ? 'Sécurité du compte et modification des identifiants' : 'أمان الحساب وتعديل بيانات الدخول'}</span>
           </div>
           <button
             onClick={onChangeCredentials}
@@ -1009,7 +1010,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         <p className="text-xs text-neutral-600 font-medium">
           {locale === 'fr' 
             ? 'Mettez à jour votre nom d\'utilisateur ou votre mot de passe pour protéger vos données sensibles.' 
-            : 'قم بتحديث اسم المستخدم أو الرقم السري الخاص بك لحماية البيانات الحساسة.'}
+            : 'قم بتحديث اسم المستخدم أو الرقم السري الخاص بك لحماية بياناتك الحساسة.'}
         </p>
       </div>
 
@@ -1018,7 +1019,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
           <div className="w-10 h-10 rounded-xl bg-sky-200 text-sky-900 border-2 border-sky-400 flex items-center justify-center shadow-2xs">
             <FileSpreadsheet size={20} />
           </div>
-          <span>{locale === 'fr' ? 'Gestion et exportation des données (PDF / Excel)' : 'إدارة وتصدير بيانات الصفقات (PDF / Excel)'}</span>
+          <span>{locale === 'fr' ? 'Gestion et exportation des données (PDF / Excel)' : 'إدارة البيانات وتصدير التقارير (PDF / Excel)'}</span>
         </h2>
         <div className="grid sm:grid-cols-2 gap-4">
           <button type="button" className="btn bg-white hover:bg-sky-100 text-sky-950 border-2 border-sky-300 py-3.5 justify-center font-bold rounded-xl shadow-2xs flex items-center gap-2 transition-all" onClick={exportExcel}>
@@ -1052,7 +1053,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         </div>
       </div>
 
-      {canInstall && !installed && (
+      {canInstall && !isInstalled && (
         <div className="card p-6 bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 text-white flex flex-wrap items-center justify-between gap-4 card-hover shadow-md border-2 border-emerald-500 rounded-2xl">
           <div><h2 className="text-lg font-bold">{t('settings.pwaTitle')}</h2><p className="text-emerald-100 text-sm mt-1">{t('settings.pwaSub')}</p></div>
           <button type="button" onClick={promptInstall} className="bg-white text-emerald-900 hover:bg-emerald-50 font-bold px-5 py-3 rounded-xl text-sm shadow-sm transition-colors flex items-center gap-2 border border-emerald-300"><MonitorSmartphone size={18} />{t('settings.install')}</button>
@@ -1073,6 +1074,25 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
   );
 }
 
+function InstallAppButton() {
+  const { canInstall, isInstalled, promptInstall } = usePwaInstall();
+
+  if (isInstalled || !canInstall) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={promptInstall}
+      aria-label="تحميل وتثبيت التطبيق"
+      title="تحميل وتثبيت التطبيق"
+      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm border border-emerald-500 transition-all"
+    >
+      <Download size={16} className="shrink-0" />
+      <span>تحميل وتثبيت التطبيق</span>
+    </button>
+  );
+}
+
 export default function App() {
   const [data, setData] = useState<AppData>({ projects: [] });
   const { t, locale } = useI18n();
@@ -1084,7 +1104,7 @@ export default function App() {
   
   const [customLogo, setCustomLogo] = useState<string>(() => localStorage.getItem('app_custom_logo') || '');
 
-  // جراءة البيانات المشفرة عند تسجيل الدخول
+  // تحميل البيانات المشفرة عند فتح التطبيق
   useEffect(() => {
     const authStatus = localStorage.getItem('app_authenticated');
     if (authStatus === 'true') {
@@ -1092,7 +1112,7 @@ export default function App() {
       const savedPass = localStorage.getItem('app_password') || '1234';
       setEncryptionKey(savedPass);
 
-      // قراءة البيانات وفك تشفيرها
+      // فك تشفير البيانات من التخزين
       const encryptedData = localStorage.getItem('secure_procurement_data');
       if (encryptedData) {
         const decrypted = decryptData(encryptedData);
@@ -1107,7 +1127,7 @@ export default function App() {
     return () => window.removeEventListener('logo_updated', handleLogoUpdate);
   }, []);
 
-  // دالة لحفظ وتشفير البيانات تلقائياً في التخزين الآمن
+  // حفظ حالة البيانات وتشفيرها وتخزينها في التخزين الآمن
   const updateData = (newData: AppData) => {
     setData(newData);
     try {
@@ -1187,7 +1207,7 @@ export default function App() {
         </div>
       )}
 
-      {/* الشريط الجانبي مع الشعار */}
+      {/* القائمة الجانبية مع الشعار */}
       <aside className="xl:w-72 bg-neutral-900 text-white p-6 flex flex-col justify-between shrink-0 shadow-lg">
         <div className="space-y-8">
           <div className="flex items-center gap-3">
@@ -1214,6 +1234,8 @@ export default function App() {
         </div>
 
         <div className="pt-6 border-t border-neutral-800 mt-6 space-y-3">
+          <InstallAppButton />
+
           <div className="p-3.5 rounded-xl bg-neutral-800/80 border-2 border-emerald-600/60 shadow-inner flex items-center justify-between text-xs">
             <div className="flex items-center gap-2.5">
               <span className="relative flex h-3 w-3">
