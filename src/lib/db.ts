@@ -89,7 +89,7 @@ export function setEncryptionKey(password: string, options?: { registerOrUpdate?
   return true;
 }
 
-export function clearEncryptionKey() {
+export function clearEncryptionKey(): void {
   derivedSecretKey = '';
 }
 
@@ -129,4 +129,12 @@ export async function loadEncryptedAppData(): Promise<any> {
   const raw = record?.value || localStorage.getItem(SECURE_STORE_KEY);
   if (!raw) return null;
   return decryptData(raw);
+}
+
+/**
+ * مسح البيانات المشفرة من Dexie و localStorage عند إعادة التعيين
+ */
+export async function clearEncryptedAppData(): Promise<void> {
+  await db.meta.delete(SECURE_STORE_KEY);
+  localStorage.removeItem(SECURE_STORE_KEY);
 }
