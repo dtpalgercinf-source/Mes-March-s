@@ -53,6 +53,7 @@ import * as XLSX from 'xlsx';
 
 type View = 'dashboard' | 'projects' | 'deadlines' | 'settings';
 type Modal = { kind: 'project' | 'invoice' | 'detail' | 'credentials'; projectId?: string } | null;
+type LogoFallbackStep = 'custom' | 'logo' | 'icon' | 'dz';
 
 function stageLabel(id: StageId, locale: Locale): string {
   const meta = stageMeta(id);
@@ -1327,10 +1328,12 @@ export default function App() {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [customLogo, setCustomLogo] = useState<string>(() => localStorage.getItem('app_custom_logo') || '');
-  const [logoError, setLogoError] = useState<boolean>(false);
+  const [fallbackStep, setFallbackStep] = useState<LogoFallbackStep>(() =>
+    localStorage.getItem('app_custom_logo') ? 'custom' : 'logo',
+  );
 
   useEffect(() => {
-    setLogoError(false);
+    setFallbackStep(customLogo ? 'custom' : 'logo');
   }, [customLogo]);
 
   useEffect(() => {
@@ -1485,12 +1488,26 @@ export default function App() {
         <div className="space-y-8">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-white p-1 flex items-center justify-center shadow-md border-2 border-emerald-500 overflow-hidden shrink-0">
-              {!logoError ? (
+              {fallbackStep === 'custom' && customLogo ? (
                 <img
-                  src={customLogo || '/icon-192.png'}
+                  src={customLogo}
+                  alt="DZ Suivi Logo"
+                  className="w-full h-full object-cover rounded-xl"
+                  onError={() => setFallbackStep('logo')}
+                />
+              ) : fallbackStep === 'logo' ? (
+                <img
+                  src="/logo.png"
                   alt="DZ Suivi Logo"
                   className="w-full h-full object-contain rounded-xl"
-                  onError={() => setLogoError(true)}
+                  onError={() => setFallbackStep('icon')}
+                />
+              ) : fallbackStep === 'icon' ? (
+                <img
+                  src="/icon-192.png"
+                  alt="DZ Suivi Icon"
+                  className="w-full h-full object-contain rounded-xl"
+                  onError={() => setFallbackStep('dz')}
                 />
               ) : (
                 <div className="w-full h-full rounded-xl bg-emerald-700 text-white flex items-center justify-center font-black text-sm tracking-wider">
