@@ -1327,6 +1327,11 @@ export default function App() {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [customLogo, setCustomLogo] = useState<string>(() => localStorage.getItem('app_custom_logo') || '');
+  const [logoError, setLogoError] = useState<boolean>(false);
+
+  useEffect(() => {
+    setLogoError(false);
+  }, [customLogo]);
 
   useEffect(() => {
     if (!toastMessage) return;
@@ -1480,10 +1485,17 @@ export default function App() {
         <div className="space-y-8">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-white p-1 flex items-center justify-center shadow-md border-2 border-emerald-500 overflow-hidden shrink-0">
-              {customLogo ? (
-                <img src={customLogo} alt="DZ Suivi Logo" className="w-full h-full object-cover rounded-xl" />
+              {!logoError ? (
+                <img
+                  src={customLogo || '/icon-192.png'}
+                  alt="DZ Suivi Logo"
+                  className="w-full h-full object-contain rounded-xl"
+                  onError={() => setLogoError(true)}
+                />
               ) : (
-                <img src="/icon-192.png" alt="DZ Suivi Logo" className="w-full h-full object-contain rounded-xl" />
+                <div className="w-full h-full rounded-xl bg-emerald-700 text-white flex items-center justify-center font-black text-sm tracking-wider">
+                  DZ
+                </div>
               )}
             </div>
             <div>
