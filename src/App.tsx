@@ -1189,8 +1189,8 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         </h2>
         <p className="text-xs text-neutral-600 font-medium">
           {locale === 'fr' 
-            ? 'Téléchargez une image pour remplacer le logo affiché dans la barre latérale.' 
-            : 'قم برفع صورة أو شعار (مثل شعار DZ Suivi) ليظهر مكان الشعار في القائمة الجانبية للتطبيق.'}
+            ? 'Téléchargez une image ou vérifiez le fichier /logo.png dans le dossier public.' 
+            : 'تأكد من وجود الملف public/logo.png في المستودع أو ارفع صورة مباشرة من هنا.'}
         </p>
         <div className="flex flex-wrap items-center gap-4 pt-2">
           <label className="btn bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-3 cursor-pointer font-bold rounded-xl shadow-sm flex items-center gap-2 transition-all">
@@ -1198,6 +1198,15 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
             {locale === 'fr' ? 'Télécharger un nouveau logo' : 'رفع صورة جديدة'}
             <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
           </label>
+          <a
+            href="/logo.png"
+            target="_blank"
+            rel="noreferrer"
+            className="px-4 py-3 bg-white hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-300 font-bold rounded-xl shadow-2xs transition-all flex items-center gap-1.5 text-sm"
+          >
+            <ImageIcon size={16} />
+            <span>فحص رابط /logo.png</span>
+          </a>
           <button 
             type="button" 
             onClick={removeCustomLogo}
