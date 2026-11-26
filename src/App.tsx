@@ -49,7 +49,6 @@ import {
   clearEncryptedAppData,
 } from '@/lib/db';
 
-// مكتبة استيراد وتصدير Excel
 import * as XLSX from 'xlsx';
 
 type View = 'dashboard' | 'projects' | 'deadlines' | 'settings';
@@ -58,6 +57,18 @@ type Modal = { kind: 'project' | 'invoice' | 'detail' | 'credentials'; projectId
 function stageLabel(id: StageId, locale: Locale): string {
   const meta = stageMeta(id);
   return locale === 'fr' ? (meta.fr ?? meta.ar) : meta.ar;
+}
+
+function matchStageFromText(rawValue: unknown): StageId {
+  if (!rawValue) return 'consultation';
+  const normalized = String(rawValue).trim().toLowerCase();
+  const found = STAGES.find(
+    (s) =>
+      s.id.toLowerCase() === normalized ||
+      (s.ar && s.ar.trim().toLowerCase() === normalized) ||
+      (s.fr && s.fr.trim().toLowerCase() === normalized),
+  );
+  return found ? found.id : 'consultation';
 }
 
 function invoiceStatusLabel(id: InvoiceStatus, locale: Locale): string {
@@ -127,6 +138,14 @@ function StageBadge({ stage, locale }: { stage: StageId; locale: Locale }) {
 }
 
 function ModalShell({ title, onClose, children, wide = false }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button aria-label="close" onClick={onClose} className="absolute inset-0 bg-neutral-950/40 backdrop-blur-sm transition-all" />
@@ -163,6 +182,10 @@ function CredentialsModal({
       setError('اسم المستخدم لا يمكن أن يكون فارغاً');
       return;
     }
+    if (password && password.length < 4) {
+      setError('الرقم السري يجب أن يتكون من 4 أحرف أو أرقام على الأقل');
+      return;
+    }
     if (password && password !== confirmPassword) {
       setError('كلمة المرور وتأكيدها غير متطابقين');
       return;
@@ -179,7 +202,6 @@ function CredentialsModal({
           setSaving(false);
           return;
         }
-        // إعادة تشفير البيانات الحالية بالمفتاح الجديد في Dexie
         await saveEncryptedAppData(currentData);
       }
 
@@ -273,7 +295,6 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
       return;
     }
 
-    // التحقق من الرقم السري واشتقاق مفتاح التشفير في الذاكرة دون حفظ كلمة المرور الخام في localStorage
     const isValidKey = setEncryptionKey(password);
     if (isValidKey) {
       sessionStorage.setItem('app_authenticated', 'true');
@@ -356,15 +377,29 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 
 function ProjectForm({ initial, onSave, onClose }: { initial?: Project; onSave: (values: Omit<Project, 'id' | 'invoices' | 'createdAt' | 'updatedAt'>) => void; onClose: () => void }) {
   const { t, locale } = useI18n();
-  const [values, setValues] = useState({ name: initial?.name ?? '', reference: initial?.reference ?? '', client: initial?.client ?? '', amount: initial?.amount?.toString() ?? '', submissionDeadline: initial?.submissionDeadline ?? '', startDate: initial?.startDate ?? '', stage: initial?.stage ?? 'consultation' as StageId, manager: initial?.manager ?? '', description: initial?.description ?? '' });
+  const [values, setValues] = useState({
+    name: initial?.name ?? '',
+    reference: initial?.reference ?? '',
+    client: initial?.client ?? '',
+    amount: initial?.amount?.toString() ?? '',
+    submissionDeadline: initial?.submissionDeadline ?? '',
+    startDate: initial?.startDate ?? '',
+    stage: initial?.stage ?? ('consultation' as StageId),
+    manager: initial?.manager ?? '',
+    description: initial?.description ?? '',
+  });
   const set = (key: keyof typeof values, value: string) => setValues((v) => ({ ...v, [key]: value }));
-  const submit = (e: FormEvent) => { e.preventDefault(); onSave({ ...values, amount: Number(values.amount) || 0, stage: values.stage as StageId }); };
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    onSave({ ...values, amount: Math.max(0, Number(values.amount) || 0), stage: values.stage as StageId });
+  };
   const req = <b className="text-error-500">*</b>;
+
   return (
     <form onSubmit={submit} className="p-6 space-y-6">
       <div className="bg-neutral-100 p-4 rounded-xl border border-neutral-200 mb-2 flex items-center gap-2 text-neutral-700 shadow-2xs">
         <BriefcaseBusiness size={18} className="text-neutral-600 shrink-0" />
-        <p className="text-xs font-bold tracking-wide">{t('form.addTitle') || 'معلومات الصفقة والمشروع الجديد'}</p>
+        <p className="text-xs font-bold tracking-wide">{initial ? t('form.editTitle') : t('form.addTitle')}</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-5">
@@ -382,7 +417,7 @@ function ProjectForm({ initial, onSave, onClose }: { initial?: Project; onSave: 
         </label>
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CircleDollarSign size={15} className="text-neutral-500" />{t('form.amount')} {req}</span>
-          <input required min="0" type="number" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" />
+          <input required min="0" step="0.01" type="number" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" />
         </label>
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CalendarDays size={15} className="text-neutral-500" />{t('form.submissionDeadline')}</span>
@@ -425,11 +460,18 @@ function InvoiceForm({ onSave, onClose }: { onSave: (invoice: Omit<Invoice, 'id'
   const { t, locale } = useI18n();
   const [values, setValues] = useState({ label: t('form.newInvoice'), amount: '', status: 'drafted' as InvoiceStatus, submittedDate: '', paidDate: '', notes: '' });
   const set = (key: keyof typeof values, value: string) => setValues((v) => ({ ...v, [key]: value }));
+
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSave({ ...values, amount: Number(values.amount) || 0, status: values.status as InvoiceStatus }); }} className="p-6 space-y-6">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSave({ ...values, amount: Math.max(0, Number(values.amount) || 0), status: values.status as InvoiceStatus });
+      }}
+      className="p-6 space-y-6"
+    >
       <div className="bg-neutral-100 p-4 rounded-xl border border-neutral-200 mb-2 flex items-center gap-2 text-neutral-700 shadow-2xs">
         <Receipt size={18} className="text-neutral-600 shrink-0" />
-        <p className="text-xs font-bold tracking-wide">{t('form.addInvoiceTitle') || 'إضافة وتفاصيل الفاتورة الجديدة'}</p>
+        <p className="text-xs font-bold tracking-wide">{t('form.addInvoiceTitle')}</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-5">
@@ -439,7 +481,7 @@ function InvoiceForm({ onSave, onClose }: { onSave: (invoice: Omit<Invoice, 'id'
         </label>
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><CircleDollarSign size={15} className="text-neutral-500" />{t('form.invoiceAmount')}</span>
-          <input required min="0" type="number" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" />
+          <input required min="0" step="0.01" type="number" className="input bg-neutral-50/80 border-2 border-neutral-300 focus:border-primary-500 focus:bg-white rounded-xl shadow-2xs font-mono transition-all py-2.5 px-3.5" value={values.amount} onChange={(e) => set('amount', e.target.value)} placeholder="0" dir="ltr" />
         </label>
         <label className="space-y-1.5 block">
           <span className="label font-semibold text-neutral-700 text-sm flex items-center gap-1.5"><Filter size={15} className="text-neutral-500" />{t('form.invoiceStatus')}</span>
@@ -476,14 +518,19 @@ function ProjectDetail({ project, onClose, onEdit, onDelete, onAddInvoice, onUpd
   const paid = project.invoices.filter((i) => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0);
   const invoiced = project.invoices.reduce((sum, i) => sum + i.amount, 0);
   const progress = Math.min(100, Math.round((paid / Math.max(1, project.amount)) * 100));
+
   return (
     <ModalShell title={t('detail.title')} onClose={onClose} wide>
       <div className="p-6 space-y-6">
         <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-5 shadow-2xs flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-3"><StageBadge stage={project.stage} locale={locale} /><span className="text-xs text-neutral-600 font-mono bg-neutral-200 px-2 py-0.5 rounded border border-neutral-300" dir="ltr">{project.reference}</span></div>
+            <div className="flex items-center gap-2 mb-3">
+              <StageBadge stage={project.stage} locale={locale} />
+              <span className="text-xs text-neutral-600 font-mono bg-neutral-200 px-2 py-0.5 rounded border border-neutral-300" dir="ltr">{project.reference}</span>
+            </div>
             <h1 className="text-xl font-extrabold text-neutral-900">{project.name}</h1>
             <p className="text-sm text-neutral-600 mt-2 flex items-center gap-2 font-medium"><BriefcaseBusiness size={15} className="text-neutral-500" />{project.client}</p>
+            {project.description && <p className="text-xs text-neutral-500 mt-2 leading-relaxed">{project.description}</p>}
           </div>
           <div className="flex gap-2">
             <button className="btn-danger btn-sm flex items-center gap-1.5 shadow-sm" onClick={onDelete}><Trash2 size={15} />{t('detail.delete')}</button>
@@ -497,15 +544,18 @@ function ProjectDetail({ project, onClose, onEdit, onDelete, onAddInvoice, onUpd
           <div className="bg-success-50/55 border border-success-100 rounded-xl p-4 shadow-2xs"><p className="text-xs text-success-700">{t('detail.collected')}</p><p className="font-bold text-success-700 mt-1">{formatCurrency(paid, locale)}</p></div>
           <div className="bg-warning-50/55 border border-warning-100 rounded-xl p-4 shadow-2xs"><p className="text-xs text-warning-700">{t('detail.remaining')}</p><p className="font-bold text-warning-700 mt-1">{formatCurrency(Math.max(0, project.amount - paid), locale)}</p></div>
         </div>
+
         <div>
           <div className="flex items-center justify-between text-sm mb-2"><span className="font-medium text-neutral-700">{t('detail.collectionProgress')}</span><span className="font-bold text-primary-600">{progress}%</span></div>
           <div className="h-2.5 rounded-full bg-neutral-100 overflow-hidden border border-neutral-200/50"><div className="h-full bg-primary-500 rounded-full transition-all" style={{ width: `${progress}%` }} /></div>
         </div>
+
         <div className="grid md:grid-cols-3 gap-4 text-sm bg-neutral-50/50 p-4 rounded-xl border border-neutral-100">
           <div><p className="text-neutral-400 text-xs mb-1">{t('detail.responsible')}</p><p className="font-medium text-neutral-700">{project.manager || t('detail.notSet')}</p></div>
           <div><p className="text-neutral-400 text-xs mb-1">{t('detail.submissionDeadline')}</p><p className="font-medium text-neutral-700" dir="ltr">{formatDate(project.submissionDeadline, locale)}</p></div>
           <div><p className="text-neutral-400 text-xs mb-1">{t('detail.start')}</p><p className="font-medium text-neutral-700" dir="ltr">{formatDate(project.startDate, locale)}</p></div>
         </div>
+
         <div className="border-t border-neutral-100 pt-5">
           <SectionTitle 
             title={t('detail.invoices')} 
@@ -539,7 +589,15 @@ function ProjectDetail({ project, onClose, onEdit, onDelete, onAddInvoice, onUpd
                     <tr key={inv.id} className="border-b last:border-0 border-neutral-100 hover:bg-neutral-50/40 transition-colors">
                       <td className="py-3 px-4 font-medium text-neutral-700">{inv.label}</td>
                       <td className="py-3 px-4 font-mono text-neutral-800">{formatCurrency(inv.amount, locale)}</td>
-                      <td className="py-3 px-4"><select className={cls('text-xs border border-neutral-200 rounded-lg px-2.5 py-1.5 font-medium focus:ring-0 cursor-pointer shadow-2xs', invoiceStatusMeta(inv.status).badge)} value={inv.status} onChange={(e) => onUpdateInvoice(inv.id, { status: e.target.value as InvoiceStatus, paidDate: e.target.value === 'paid' ? new Date().toISOString().slice(0, 10) : inv.paidDate })}>{INVOICE_STATUSES.map((s) => <option key={s.id} value={s.id}>{invoiceStatusLabel(s.id, locale)}</option>)}</select></td>
+                      <td className="py-3 px-4">
+                        <select
+                          className={cls('text-xs border border-neutral-200 rounded-lg px-2.5 py-1.5 font-medium focus:ring-0 cursor-pointer shadow-2xs', invoiceStatusMeta(inv.status).badge)}
+                          value={inv.status}
+                          onChange={(e) => onUpdateInvoice(inv.id, { status: e.target.value as InvoiceStatus, paidDate: e.target.value === 'paid' ? new Date().toISOString().slice(0, 10) : inv.paidDate })}
+                        >
+                          {INVOICE_STATUSES.map((s) => <option key={s.id} value={s.id}>{invoiceStatusLabel(s.id, locale)}</option>)}
+                        </select>
+                      </td>
                       <td className="py-3 px-4 text-neutral-500 font-mono text-xs" dir="ltr">{formatDateShort(inv.paidDate || inv.submittedDate, locale)}</td>
                       <td className="px-4"><IconButton label={t('detail.deleteInvoice')} danger onClick={() => onDeleteInvoice(inv.id)}><Trash2 size={15} /></IconButton></td>
                     </tr>
@@ -554,7 +612,17 @@ function ProjectDetail({ project, onClose, onEdit, onDelete, onAddInvoice, onUpd
   );
 }
 
-function Dashboard({ projects, onViewProject, onAdd }: { projects: Project[]; onViewProject: (p: Project) => void; onAdd: () => void }) {
+function Dashboard({
+  projects,
+  onViewProject,
+  onAdd,
+  onViewAllDeadlines,
+}: {
+  projects: Project[];
+  onViewProject: (p: Project) => void;
+  onAdd: () => void;
+  onViewAllDeadlines: () => void;
+}) {
   const { t, locale } = useI18n();
   const active = projects.filter((p) => p.stage !== 'invoicing').length;
   const expected = projects.reduce((s, p) => s + p.amount, 0);
@@ -564,6 +632,7 @@ function Dashboard({ projects, onViewProject, onAdd }: { projects: Project[]; on
   const statusCounts = STAGES.map((stage) => ({ ...stage, count: projects.filter((p) => p.stage === stage.id).length }));
   const max = Math.max(1, ...statusCounts.map((s) => s.count));
   const upcoming = projects.filter((p) => p.submissionDeadline).sort((a, b) => (a.submissionDeadline ?? '').localeCompare(b.submissionDeadline ?? '')).slice(0, 5);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-900 border-2 border-emerald-600 rounded-2xl p-5 shadow-md flex flex-wrap items-center justify-between gap-4 text-white">
@@ -596,6 +665,7 @@ function Dashboard({ projects, onViewProject, onAdd }: { projects: Project[]; on
         <StatCard icon={TrendingUp} label={t('dash.collected')} value={formatCurrencyShort(collected, locale)} caption={`${invoiceCount} ${t('dash.invoicesRecorded')}`} color="green" />
         <StatCard icon={WalletCards} label={t('dash.pending')} value={formatCurrencyShort(pending, locale)} caption={t('dash.awaiting')} color="amber" />
       </div>
+
       <div className="grid xl:grid-cols-5 gap-6">
         <div className="card p-5 xl:col-span-3 card-hover border border-neutral-100">
           <SectionTitle title={t('dash.stageDistribution')} subtitle={t('dash.stageSub')} action={<button className="btn-ghost btn-sm flex items-center gap-1" onClick={onAdd}>{t('dash.refresh')} <RefreshCcw size={14} /></button>} />
@@ -609,6 +679,7 @@ function Dashboard({ projects, onViewProject, onAdd }: { projects: Project[]; on
             ))}
           </div>
         </div>
+
         <div className="card p-5 xl:col-span-2 card-hover border border-neutral-100">
           <SectionTitle title={t('dash.financials')} subtitle={t('dash.financialsSub')} />
           <div className="space-y-5">
@@ -623,8 +694,17 @@ function Dashboard({ projects, onViewProject, onAdd }: { projects: Project[]; on
           </div>
         </div>
       </div>
+
       <div className="card p-5 card-hover border border-neutral-100">
-        <SectionTitle title={t('dash.upcoming')} subtitle={t('dash.upcomingSub')} action={<button className="btn-ghost btn-sm flex items-center gap-1" onClick={() => {}}>{t('dash.viewAll')} <ChevronLeft size={15} className="flip-x" /></button>} />
+        <SectionTitle
+          title={t('dash.upcoming')}
+          subtitle={t('dash.upcomingSub')}
+          action={
+            <button className="btn-ghost btn-sm flex items-center gap-1" onClick={onViewAllDeadlines}>
+              {t('dash.viewAll')} <ChevronLeft size={15} className="flip-x" />
+            </button>
+          }
+        />
         {upcoming.length ? (
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
             {upcoming.slice(0, 3).map((p) => {
@@ -649,8 +729,25 @@ function Dashboard({ projects, onViewProject, onAdd }: { projects: Project[]; on
 
 function ProjectsView({ projects, onView, onEdit, onAdd }: { projects: Project[]; onView: (p: Project) => void; onEdit: (p: Project) => void; onAdd: () => void }) {
   const { t, locale } = useI18n();
-  const [query, setQuery] = useState(''); const [stage, setStage] = useState<StageId | 'all'>('all'); const [view, setView] = useState<'kanban' | 'table'>('kanban');
-  const filtered = useMemo(() => projects.filter((p) => { const q = query.toLowerCase(); return (!q || p.name.toLowerCase().includes(q) || p.client.toLowerCase().includes(q) || p.reference.toLowerCase().includes(q)) && (stage === 'all' || p.stage === stage); }), [projects, query, stage]);
+  const [query, setQuery] = useState('');
+  const [stage, setStage] = useState<StageId | 'all'>('all');
+  const [view, setView] = useState<'kanban' | 'table'>('kanban');
+
+  const filtered = useMemo(
+    () =>
+      projects.filter((p) => {
+        const q = query.trim().toLowerCase();
+        return (
+          (!q ||
+            p.name.toLowerCase().includes(q) ||
+            p.client.toLowerCase().includes(q) ||
+            p.reference.toLowerCase().includes(q)) &&
+          (stage === 'all' || p.stage === stage)
+        );
+      }),
+    [projects, query, stage],
+  );
+
   return (
     <div className="space-y-5 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -666,8 +763,12 @@ function ProjectsView({ projects, onView, onEdit, onAdd }: { projects: Project[]
           <span>{t('projects.add')}</span>
         </button>
       </div>
+
       <div className="card p-3 flex flex-wrap gap-3 items-center border border-neutral-100">
-        <div className="relative flex-1 min-w-56"><Search size={17} className="absolute right-3 top-3 text-neutral-400" /><input className="input pr-10 border-neutral-200 focus:border-primary-500" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('projects.search')} /></div>
+        <div className="relative flex-1 min-w-56">
+          <Search size={17} className="absolute right-3 top-3 text-neutral-400" />
+          <input className="input pr-10 border-neutral-200 focus:border-primary-500" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('projects.search')} />
+        </div>
         <div className="relative min-w-52">
           <Filter size={16} className="absolute right-3 top-3 text-neutral-400 pointer-events-none" />
           <select className="input pr-9 appearance-none border-neutral-200 focus:border-primary-500" value={stage} onChange={(e) => setStage(e.target.value as StageId | 'all')}>
@@ -681,6 +782,7 @@ function ProjectsView({ projects, onView, onEdit, onAdd }: { projects: Project[]
           <button className={cls('p-2 rounded-md transition-colors', view === 'table' ? 'bg-white text-primary-600 shadow-sm font-bold' : 'text-neutral-500')} onClick={() => setView('table')} title={t('projects.table')}><List size={17} /></button>
         </div>
       </div>
+
       {view === 'kanban' ? (
         <div className="flex gap-4 overflow-x-auto pb-3 snap-x">
           {STAGES.map((s) => {
@@ -734,7 +836,7 @@ function ProjectsView({ projects, onView, onEdit, onAdd }: { projects: Project[]
                     <td className="px-5 py-4"><StageBadge stage={p.stage} locale={locale} /></td>
                     <td className="px-5 py-4 font-semibold text-neutral-700 font-mono">{formatCurrency(p.amount, locale)}</td>
                     <td className="px-5 py-4 text-neutral-500 font-mono text-xs" dir="ltr">{formatDateShort(p.submissionDeadline, locale)}</td>
-                    <td className="px-5 py-4"><IconButton label={t('projects.edit')} onClick={() => onEdit(p)}><Pencil size={15} /></IconButton></td>
+                    <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}><IconButton label={t('projects.edit')} onClick={() => onEdit(p)}><Pencil size={15} /></IconButton></td>
                   </tr>
                 ))}
               </tbody>
@@ -751,7 +853,6 @@ function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: 
   const { t, locale } = useI18n();
   const reminders = projects.filter((p) => p.submissionDeadline).map((p) => ({ p, kind: 'deadline' as const, date: p.submissionDeadline! })).sort((a, b) => a.date.localeCompare(b.date));
   const unpaidInvoices = projects.flatMap((p) => p.invoices.filter((i) => i.status !== 'paid').map((i) => ({ p, i })));
-  
   const urgentRemindersCount = reminders.filter((r) => { const d = relativeDeadline(r.date, locale); return d.tone === 'danger' || d.tone === 'warning'; }).length;
 
   return (
@@ -766,7 +867,7 @@ function DeadlinesView({ projects, onView }: { projects: Project[]; onView: (p: 
         </div>
         <div className="flex items-center gap-2">
           <span className="px-3.5 py-1.5 bg-rose-100 text-rose-800 text-xs font-bold rounded-xl border-2 border-rose-300 shadow-2xs">
-            {urgentRemindersCount} {t('deadlines.upcoming30') || 'مواعيد عاجلة'}
+            {urgentRemindersCount} {t('deadlines.upcoming30')}
           </span>
         </div>
       </div>
@@ -905,7 +1006,12 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
   const exportPdf = () => {
     try {
       const printWindow = window.open('', '_blank');
-      if (!printWindow) return;
+      if (!printWindow) {
+        setMessage(locale === 'fr' ? 'Veuillez autoriser les fenêtres contextuelles pour exporter le PDF.' : 'يرجى السماح بالنوافذ المنبثقة لطباعة تقرير PDF.');
+        return;
+      }
+
+      const totalAmount = data.projects.reduce((sum, p) => sum + p.amount, 0);
 
       const htmlContent = `
         <!DOCTYPE html>
@@ -921,6 +1027,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
             th, td { border: 1px solid #e5e7eb; padding: 10px 12px; text-align: ${locale === 'ar' ? 'right' : 'left'}; font-size: 13px; }
             th { background-color: #f3f4f6; color: #111827; font-weight: bold; }
             tr:nth-child(even) { background-color: #f9fafb; }
+            tfoot td { font-weight: bold; background-color: #ecfdf5; color: #065f46; }
           </style>
         </head>
         <body>
@@ -949,6 +1056,12 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
                 </tr>
               `).join('')}
             </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3">${locale === 'fr' ? 'Total des marchés' : 'إجمالي الصفقات'} (${data.projects.length})</td>
+                <td colspan="3" style="font-family: monospace;">${totalAmount.toLocaleString()}</td>
+              </tr>
+            </tfoot>
           </table>
         </body>
         </html>
@@ -978,22 +1091,26 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         const workbook = XLSX.read(dataBuffer, { type: 'array' });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json<any>(worksheet);
+        const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet);
 
-        const importedProjects: Project[] = jsonData.map((row, index) => ({
-          id: `imported_${Date.now()}_${index}`,
-          name: row['اسم المشروع'] || row['Nom du Projet'] || row['name'] || 'مشروع مستورد',
-          reference: row['المرجع'] || row['Référence'] || row['reference'] || `REF-${index}`,
-          client: row['العميل'] || row['Client'] || row['client'] || 'عميل عام',
-          amount: Number(row['المبلغ (دج)'] || row['Montant (DZD)'] || row['amount'] || 0),
-          stage: 'consultation' as StageId,
-          manager: row['المسؤول'] || row['Responsable'] || row['manager'] || '',
-          submissionDeadline: row['تاريخ التسليم'] || row['Date limite'] || row['submissionDeadline'] || '',
-          startDate: row['تاريخ البدء'] || row['Date de début'] || row['startDate'] || '',
-          invoices: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }));
+        const importedProjects: Project[] = jsonData.map((row, index) => {
+          const rawStage = row['المرحلة'] || row['Étape'] || row['stage'];
+          return {
+            id: `imported_${Date.now()}_${index}`,
+            name: String(row['اسم المشروع'] || row['Nom du Projet'] || row['name'] || 'مشروع مستورد'),
+            reference: String(row['المرجع'] || row['Référence'] || row['reference'] || `REF-${index + 1}`),
+            client: String(row['العميل'] || row['Client'] || row['client'] || 'عميل عام'),
+            amount: Math.max(0, Number(row['المبلغ (دج)'] || row['Montant (DZD)'] || row['amount'] || 0) || 0),
+            stage: matchStageFromText(rawStage),
+            manager: String(row['المسؤول'] || row['Responsable'] || row['manager'] || ''),
+            submissionDeadline: String(row['تاريخ التسليم'] || row['Date limite'] || row['submissionDeadline'] || ''),
+            startDate: String(row['تاريخ البدء'] || row['Date de début'] || row['startDate'] || ''),
+            description: String(row['ملاحظات'] || row['Notes'] || row['description'] || ''),
+            invoices: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+        });
 
         if (importedProjects.length) {
           onImport({ ...data, projects: [...importedProjects, ...data.projects] });
@@ -1003,6 +1120,8 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         }
       } catch {
         setMessage(locale === 'fr' ? 'Échec de la lecture du fichier Excel.' : 'فشل قراءة ملف Excel. تأكد من صحة الملف.');
+      } finally {
+        e.target.value = '';
       }
     };
     reader.readAsArrayBuffer(file);
@@ -1011,6 +1130,11 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
   const handleLogoUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 1024 * 1024) {
+      setMessage(locale === 'fr' ? 'La taille de l\'image ne doit pas dépasser 1 Mo.' : 'حجم الصورة يجب ألا يتجاوز 1 ميغابايت.');
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (uploadEvent) => {
       const base64Image = uploadEvent.target?.result as string;
@@ -1021,6 +1145,7 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
       }
     };
     reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const removeCustomLogo = () => {
@@ -1047,7 +1172,12 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
         </div>
       </div>
 
-      {message && <div className="p-4 rounded-xl bg-primary-50 text-primary-700 text-sm font-medium flex items-center justify-between border border-primary-100"><span>{message}</span><button onClick={() => setMessage('')}><X size={16} /></button></div>}
+      {message && (
+        <div className="p-4 rounded-xl bg-primary-50 text-primary-700 text-sm font-medium flex items-center justify-between border border-primary-100">
+          <span>{message}</span>
+          <button onClick={() => setMessage('')}><X size={16} /></button>
+        </div>
+      )}
 
       <div className="card p-6 space-y-5 border-2 border-emerald-300 bg-emerald-50/40 card-hover shadow-2xs rounded-2xl">
         <h2 className="text-base font-extrabold text-emerald-950 flex items-center gap-3">
@@ -1164,7 +1294,6 @@ function SettingsView({ data, onImport, onReset, onLogout, onChangeCredentials }
 function InstallAppButton() {
   const { canInstall, installed, promptInstall } = usePwaInstall();
 
-  // إخفاء الزر فقط إذا كان التطبيق مثبتاً ويعمل في وضع التطبيق المستقل
   if (installed) return null;
 
   const handleInstallClick = () => {
@@ -1197,10 +1326,30 @@ export default function App() {
   const [modal, setModal] = useState<Modal>(null);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  
   const [customLogo, setCustomLogo] = useState<string>(() => localStorage.getItem('app_custom_logo') || '');
 
-  // تحميل البيانات المشفرة من Dexie عند فتح التطبيق
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = setTimeout(() => setToastMessage(null), 4000);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator && import.meta.env.PROD) {
+      const registerSW = () => {
+        navigator.serviceWorker
+          .register('/sw.js')
+          .catch((err) => console.error('فشل تسجيل Service Worker:', err));
+      };
+
+      if (document.readyState === 'complete') {
+        registerSW();
+      } else {
+        window.addEventListener('load', registerSW, { once: true });
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const authStatus = sessionStorage.getItem('app_authenticated');
     if (authStatus === 'true') {
@@ -1217,7 +1366,6 @@ export default function App() {
     return () => window.removeEventListener('logo_updated', handleLogoUpdate);
   }, []);
 
-  // حفظ حالة البيانات وتشفيرها وتخزينها في Dexie
   const updateData = async (newData: AppData) => {
     setData(newData);
     try {
@@ -1228,14 +1376,18 @@ export default function App() {
   };
 
   const resetData = async () => {
-    const emptyData = { projects: [] };
+    const emptyData: AppData = { projects: [] };
     setData(emptyData);
     await clearEncryptedAppData();
+    setToastMessage('تم مسح جميع البيانات بنجاح.');
   };
 
   const handleLogout = () => {
     sessionStorage.removeItem('app_authenticated');
     clearEncryptionKey();
+    setData({ projects: [] });
+    setModal(null);
+    setActiveProject(null);
     setIsAuthenticated(false);
   };
 
@@ -1247,10 +1399,15 @@ export default function App() {
   const saveProject = (values: Omit<Project, 'createdAt' | 'id' | 'invoices' | 'updatedAt'>) => {
     const now = new Date().toISOString();
     if (modal?.kind === 'project' && modal.projectId) {
-      updateData({ ...data, projects: data.projects.map((p) => (p.id === modal.projectId ? { ...p, ...values, updatedAt: now } : p)) });
+      updateData({
+        ...data,
+        projects: data.projects.map((p) => (p.id === modal.projectId ? { ...p, ...values, updatedAt: now } : p)),
+      });
+      setToastMessage('تم تحديث بيانات الصفقة بنجاح.');
     } else {
       const newProj: Project = { ...values, id: `proj_${Date.now()}`, invoices: [], createdAt: now, updatedAt: now };
       updateData({ ...data, projects: [newProj, ...data.projects] });
+      setToastMessage('تمت إضافة الصفقة الجديدة بنجاح.');
     }
     setModal(null);
   };
@@ -1259,19 +1416,42 @@ export default function App() {
     if (!window.confirm(t('detail.confirmDelete'))) return;
     updateData({ ...data, projects: data.projects.filter((p) => p.id !== id) });
     setModal(null);
+    setToastMessage('تم حذف الصفقة بنجاح.');
   };
 
   const addInvoice = (projectId: string, invoice: Omit<Invoice, 'createdAt' | 'id'>) => {
     const inv: Invoice = { ...invoice, id: `inv_${Date.now()}`, createdAt: new Date().toISOString() };
-    updateData({ ...data, projects: data.projects.map((p) => (p.id === projectId ? { ...p, invoices: [inv, ...p.invoices], updatedAt: new Date().toISOString() } : p)) });
+    updateData({
+      ...data,
+      projects: data.projects.map((p) =>
+        p.id === projectId ? { ...p, invoices: [inv, ...p.invoices], updatedAt: new Date().toISOString() } : p,
+      ),
+    });
+    setToastMessage('تمت إضافة الفاتورة بنجاح.');
   };
 
   const updateInvoice = (projectId: string, invoiceId: string, patch: Partial<Invoice>) => {
-    updateData({ ...data, projects: data.projects.map((p) => (p.id === projectId ? { ...p, invoices: p.invoices.map((i) => (i.id === invoiceId ? { ...i, ...patch } : i)), updatedAt: new Date().toISOString() } : p)) });
+    updateData({
+      ...data,
+      projects: data.projects.map((p) =>
+        p.id === projectId
+          ? { ...p, invoices: p.invoices.map((i) => (i.id === invoiceId ? { ...i, ...patch } : i)), updatedAt: new Date().toISOString() }
+          : p,
+      ),
+    });
   };
 
   const deleteInvoice = (projectId: string, invoiceId: string) => {
-    updateData({ ...data, projects: data.projects.map((p) => (p.id === projectId ? { ...p, invoices: p.invoices.filter((i) => i.id !== invoiceId), updatedAt: new Date().toISOString() } : p)) });
+    if (!window.confirm(t('detail.deleteInvoice') + '؟')) return;
+    updateData({
+      ...data,
+      projects: data.projects.map((p) =>
+        p.id === projectId
+          ? { ...p, invoices: p.invoices.filter((i) => i.id !== invoiceId), updatedAt: new Date().toISOString() }
+          : p,
+      ),
+    });
+    setToastMessage('تم حذف الفاتورة بنجاح.');
   };
 
   if (!isAuthenticated) {
@@ -1289,23 +1469,22 @@ export default function App() {
   return (
     <div className={cls('min-h-screen bg-neutral-100 flex flex-col xl:flex-row text-neutral-800 font-sans', locale === 'ar' ? 'rtl' : 'ltr')} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       {toastMessage && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-emerald-700 text-white px-6 py-3 rounded-2xl shadow-xl font-bold text-sm border border-emerald-500 animate-bounce flex items-center gap-2">
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-emerald-700 text-white px-6 py-3 rounded-2xl shadow-xl font-bold text-sm border border-emerald-500 flex items-center gap-2">
           <CheckCircle2 size={18} />
           <span>{toastMessage}</span>
           <button onClick={() => setToastMessage(null)} className="mr-3 ml-1 text-emerald-200 hover:text-white"><X size={15} /></button>
         </div>
       )}
 
-      {/* القائمة الجانبية مع الشعار */}
       <aside className="xl:w-72 bg-neutral-900 text-white p-6 flex flex-col justify-between shrink-0 shadow-lg">
         <div className="space-y-8">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-white p-1 flex items-center justify-center shadow-md border-2 border-emerald-500 overflow-hidden shrink-0">
-              <img 
-                src={customLogo || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=60"} 
-                alt="DZ Suivi Logo" 
-                className="w-full h-full object-cover rounded-xl" 
-              />
+              {customLogo ? (
+                <img src={customLogo} alt="DZ Suivi Logo" className="w-full h-full object-cover rounded-xl" />
+              ) : (
+                <img src="/icon-192.png" alt="DZ Suivi Logo" className="w-full h-full object-contain rounded-xl" />
+              )}
             </div>
             <div>
               <h1 className="font-extrabold text-base tracking-tight">{t('app.title')}</h1>
@@ -1352,10 +1531,37 @@ export default function App() {
       </aside>
 
       <main className="flex-1 p-6 sm:p-8 max-w-7xl mx-auto w-full overflow-y-auto">
-        {view === 'dashboard' && <Dashboard projects={data.projects} onViewProject={(p) => setModal({ kind: 'detail', projectId: p.id })} onAdd={() => setModal({ kind: 'project' })} />}
-        {view === 'projects' && <ProjectsView projects={data.projects} onView={(p) => setModal({ kind: 'detail', projectId: p.id })} onEdit={(p) => setModal({ kind: 'project', projectId: p.id })} onAdd={() => setModal({ kind: 'project' })} />}
-        {view === 'deadlines' && <DeadlinesView projects={data.projects} onView={(p) => setModal({ kind: 'detail', projectId: p.id })} />}
-        {view === 'settings' && <SettingsView data={data} onImport={(d) => updateData(d)} onReset={resetData} onLogout={handleLogout} onChangeCredentials={() => setModal({ kind: 'credentials' })} />}
+        {view === 'dashboard' && (
+          <Dashboard
+            projects={data.projects}
+            onViewProject={(p) => setModal({ kind: 'detail', projectId: p.id })}
+            onAdd={() => setModal({ kind: 'project' })}
+            onViewAllDeadlines={() => setView('deadlines')}
+          />
+        )}
+        {view === 'projects' && (
+          <ProjectsView
+            projects={data.projects}
+            onView={(p) => setModal({ kind: 'detail', projectId: p.id })}
+            onEdit={(p) => setModal({ kind: 'project', projectId: p.id })}
+            onAdd={() => setModal({ kind: 'project' })}
+          />
+        )}
+        {view === 'deadlines' && (
+          <DeadlinesView
+            projects={data.projects}
+            onView={(p) => setModal({ kind: 'detail', projectId: p.id })}
+          />
+        )}
+        {view === 'settings' && (
+          <SettingsView
+            data={data}
+            onImport={(d) => updateData(d)}
+            onReset={resetData}
+            onLogout={handleLogout}
+            onChangeCredentials={() => setModal({ kind: 'credentials' })}
+          />
+        )}
       </main>
 
       {modal?.kind === 'project' && (
@@ -1365,7 +1571,15 @@ export default function App() {
       )}
 
       {modal?.kind === 'detail' && currentProject && (
-        <ProjectDetail project={currentProject} onClose={() => setModal(null)} onEdit={() => setModal({ kind: 'project', projectId: currentProject.id })} onDelete={() => deleteProject(currentProject.id)} onAddInvoice={() => setActiveProject(currentProject)} onUpdateInvoice={(invId, patch) => updateInvoice(currentProject.id, invId, patch)} onDeleteInvoice={(invId) => deleteInvoice(currentProject.id, invId)} />
+        <ProjectDetail
+          project={currentProject}
+          onClose={() => setModal(null)}
+          onEdit={() => setModal({ kind: 'project', projectId: currentProject.id })}
+          onDelete={() => deleteProject(currentProject.id)}
+          onAddInvoice={() => setActiveProject(currentProject)}
+          onUpdateInvoice={(invId, patch) => updateInvoice(currentProject.id, invId, patch)}
+          onDeleteInvoice={(invId) => deleteInvoice(currentProject.id, invId)}
+        />
       )}
 
       {modal?.kind === 'credentials' && (
